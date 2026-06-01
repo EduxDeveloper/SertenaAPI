@@ -1,8 +1,11 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-//Rutas de Usuarios
-import adminRoutes from "./src/routes/adminRoutes.js"
+//Rutas de Administrador
+import adminRoutes from "./src/routes/adminRoutes.js";
+import adminRecoveryRoutes from "./src/routes/adminRecoveryRoutes.js";
+import adminLoginRoutes from "./src/routes/adminLoginRoutes.js"
+import adminLogoutRoutes from "./src/routes/adminLogoutRoutes.js";
 
 const app = express();
 
@@ -18,7 +21,11 @@ app.use(cookieParser());
 
 //Para que la API acepte json
 app.use(express.json());
-app.use("/api/admin", adminRoutes);
 
+//Rutas para Administrador
+app.use("/api/admin", adminRoutes);
+app.use("/api/adminRecovery", adminRecoveryRoutes);
+app.use("/api/adminLogin", adminLoginRoutes);
+app.use("/api/adminLogout", adminLogoutRoutes);
 
 export default app;

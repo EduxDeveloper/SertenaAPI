@@ -15,7 +15,6 @@ const adminSchema = new Schema({
     email: { type: String },
     password: { type: String },
     status: { type: Boolean },
-    loginAttemps: { type: Number },
     timeOut: { type: Date },
 }, {
     timestamps: true,

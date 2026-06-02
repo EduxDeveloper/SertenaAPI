@@ -6,6 +6,8 @@ import adminRoutes from "./src/routes/adminRoutes.js";
 import adminRecoveryRoutes from "./src/routes/adminRecoveryRoutes.js";
 import adminLoginRoutes from "./src/routes/adminLoginRoutes.js"
 import adminLogoutRoutes from "./src/routes/adminLogoutRoutes.js";
+//Rutas de servicios
+import servicesRoutes from "./src/routes/servicesRoutes.js";
 
 const app = express();
 
@@ -27,5 +29,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/adminRecovery", adminRecoveryRoutes);
 app.use("/api/adminLogin", adminLoginRoutes);
 app.use("/api/adminLogout", adminLogoutRoutes);
+//Ruta para servicios
+app.use("/api/services", servicesRoutes);
 
 export default app;

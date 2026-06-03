@@ -8,6 +8,8 @@ import adminLoginRoutes from "./src/routes/adminLoginRoutes.js"
 import adminLogoutRoutes from "./src/routes/adminLogoutRoutes.js";
 //Rutas de servicios
 import servicesRoutes from "./src/routes/servicesRoutes.js";
+//Ruta de citas/proyectos
+import ProyectRoutes from "./src/models/Proyects.js";
 
 const app = express();
 
@@ -31,5 +33,7 @@ app.use("/api/adminLogin", adminLoginRoutes);
 app.use("/api/adminLogout", adminLogoutRoutes);
 //Ruta para servicios
 app.use("/api/services", servicesRoutes);
+//citas/proyectos
+app.use("/api/proyects", ProyectRoutes)
 
 export default app;

@@ -1,4 +1,4 @@
-import clienteModel from "../modelos/ClienteModel.js";
+import clienteModel from "../models/clientesModel.js";
 import bcrypt from "bcryptjs";
 
 const clienteController = {};

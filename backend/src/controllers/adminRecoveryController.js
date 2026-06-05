@@ -2,11 +2,11 @@ import jsonwebtoken from "jsonwebtoken"; //Generar tokens
 import bcrypt from "bcryptjs"; //Encriptar la contraseña
 import crypto from "crypto"; //Generar códigos aleatorios
 import nodemailer from "nodemailer"; //Enviar correos
-import HTMLRecoveryEmail from "../utils/HTMLRecoveryEmail.js";
+import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
 
 import { config } from "../../config.js";
 
-import adminMOdel from "../models/adminModel.js"
+import adminModel from "../models/adminModel.js"
 
 const recoveryController = {};
 
@@ -17,7 +17,7 @@ recoveryController.requestCode = async (req, res) => {
         const { email } = req.body;
 
         //Validar que el correo si exista en la bd
-        const adminFound = await adminMOdel.findOne({ email });
+        const adminFound = await adminModel.findOne({ email });
 
         if (!adminFound) {
             return res.status(404).json({ message: "Admin not found" });
@@ -54,7 +54,7 @@ recoveryController.requestCode = async (req, res) => {
             to: email,
             subject: "Recuperación de contraseña",
             body: "El código vence en 15 minutos",
-            html: HTMLRecoveryEmail(randomCode),
+            html: htmlRecoveryEmail(randomCode),
         };
 
         //#3- Enviar correo electrónico
@@ -130,7 +130,7 @@ recoveryController.newPassword = async (req, res) => {
         const passwordHash = await bcrypt.hash(newPassword, 10);
 
         //Actualizar la contraseña en la base de datos
-        await adminMOdel.findOneAndUpdate(
+        await adminModel.findOneAndUpdate(
             { email: decoded.email },
             { password: passwordHash },
             { new: true },

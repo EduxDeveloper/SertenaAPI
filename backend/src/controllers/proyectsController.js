@@ -1,28 +1,28 @@
-import ProyectsModel from "../models/Proyects.js";
+import proyectsModel from "../models/proyectsModel.js";
 
 const proyectsController = {}
 
-proyectsController.getProyects = async (res, req) => {
-    const proyects = await ProyectsModel.find();
+proyectsController.getProyects = async (req, res) => {
+    const proyects = await proyectsModel.find();
     res.json(proyects);
 };
 
-proyectsController.InsertProyects = async (req, res) => {
+proyectsController.insertProyects = async (req, res) => {
     const {idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,descritption} = req.body;
-    const newProyect = new ProyectsModel({idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,descritption});
-    await newPizza.save();
+    const newProyect = new proyectsModel({idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,descritption});
+    await newProyect.save();
     res.json({message: "Proyect saved"})
 };
 
 proyectsController.deleteProyects = async (req, res) => {
-    await ProyectsModel.findbyIdAndDelete(req.params.id);
+    await proyectsModel.findByIdAndDelete(req.params.id);
     res.json({})
 };
 
-proyectsController.updatProyects = async (res,res) => {
+proyectsController.updateProyects = async (req, res) => {
     const {idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,descritption} = req.body;
 
-    await ProyectsModel.findbyIdAndUpdate(
+    await proyectsModel.findByIdAndUpdate(
         req.params.id,
         {
             idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,descritption
@@ -33,21 +33,21 @@ proyectsController.updatProyects = async (res,res) => {
     res.json({message: "Proyect Updated"});
 };
 
-pizzasController.searchByName = async (req, res) => {
+proyectsController.searchByName = async (req, res) => {
   try {
     
     //#1- Solicito los datos
     const {name} = req.body
 
-    const pizzas = await pizzasModel.find({
+    const proyects = await proyectsModel.find({
       name: { $regex: name, $options: "i" }
     })
 
-    if(!pizzas){
-      return res.status(404).json({message: "Pizzas not found with this name"})
+    if(!proyects){
+      return res.status(404).json({message: "Proyects not found with this name"})
     }
 
-    return res.status(200).json(pizzas)
+    return res.status(200).json(proyects)
   } catch (error) {
     console.log("error"+error)
     return res.status(500).json({message: "Internal server error"})

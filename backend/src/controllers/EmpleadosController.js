@@ -1,4 +1,4 @@
-import empleadoModel from "../models/EmpleadoModel.js";
+import empleadoModel from "../models/empleadosModel.js";
 import bcrypt from "bcryptjs";
 
 const empleadoController = {};

@@ -5,10 +5,10 @@ const router = express.Router();
 
 router.route("/")
     .get(proyectsController.getProyects)
-    .post(proyectsController.InsertProyects)
+    .post(proyectsController.insertProyects)
 
 router.route("/:id")
-.put(proyectsController.updatProyects)
+.put(proyectsController.updateProyects)
 .delete(proyectsController.deleteProyects)
 
 export default router;

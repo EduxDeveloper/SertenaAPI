@@ -9,7 +9,11 @@ import adminLogoutRoutes from "./src/routes/adminLogoutRoutes.js";
 //Rutas de servicios
 import servicesRoutes from "./src/routes/servicesRoutes.js";
 //Ruta de citas/proyectos
-import ProyectRoutes from "./src/models/Proyects.js";
+import proyectRoutes from "./src/routes/proyectRoutes.js";
+//Rutas de clientes
+import clientesRoutes from "./src/routes/clientesRoutes.js";
+//Rutas de empleados
+import empleadosRoutes from "./src/routes/empleadosRoutes.js";
 
 const app = express();
 
@@ -34,6 +38,10 @@ app.use("/api/adminLogout", adminLogoutRoutes);
 //Ruta para servicios
 app.use("/api/services", servicesRoutes);
 //citas/proyectos
-app.use("/api/proyects", ProyectRoutes)
+app.use("/api/proyects", proyectRoutes);
+//Ruta para clientes
+app.use("/api/clientes", clientesRoutes);
+//Ruta para empleados
+app.use("/api/empleados", empleadosRoutes);
 
 export default app;

@@ -14,6 +14,8 @@ import proyectRoutes from "./src/routes/proyectRoutes.js";
 import clientesRoutes from "./src/routes/clientesRoutes.js";
 //Rutas de empleados
 import empleadosRoutes from "./src/routes/empleadosRoutes.js";
+//Rutas de reviews
+import reviewsRoutes from "./src/routes/reviewsRoutes.js";
 
 const app = express();
 
@@ -43,5 +45,7 @@ app.use("/api/proyects", proyectRoutes);
 app.use("/api/clientes", clientesRoutes);
 //Ruta para empleados
 app.use("/api/empleados", empleadosRoutes);
+//Ruta para reviews
+app.use("/api/reviews", reviewsRoutes);
 
 export default app;

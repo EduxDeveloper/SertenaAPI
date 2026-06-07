@@ -20,7 +20,7 @@ const proyectSchema = new Schema({
     clientLocation: { type: String },
     finalPrice: { type: String },
     status: { type: String },
-    descritption: { type: String },
+    description: { type: String },
 }, {
     timestamps: true,
     strict: false

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-mongoose.connect("mongodb://localhost:27017/SertenaDB")
+mongoose.connect("mongodb+srv://sertenaservicios_db_user:lbWHpF93QI6k68ru@sertenacluster.ecu7ybk.mongodb.net/sertenaDB5?appName=SertenaCluster")
 
 //Comprobar que todo funciona
 

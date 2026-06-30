@@ -9,9 +9,9 @@ import { config } from "../../config.js";
 import { register } from "module";
 
 //array de funciones
-const registerCustomerController = {};
+const registerClientsController = {};
 
-registerCustomerController.register = async (req, res) => {
+registerClientsController.register = async (req, res) => {
   try {
     //#1- Solicitar los datos a guardar
     const {
@@ -27,7 +27,7 @@ registerCustomerController.register = async (req, res) => {
     //#2- Validar si el correo existe en la base de datos
     const existsCliente = await clienteModel.findOne({ email });
     if (existsCliente) {
-      return res.status(400).json({ message: "Customer already exists " });
+      return res.status(400).json({ message: "Client already exists " });
     }
 
     //Encriptar la contraseña
@@ -94,7 +94,7 @@ registerCustomerController.register = async (req, res) => {
 };
 
 //VERIFICAR EL CÓDIGO QUE ACABAMOS DE ENVIAR
-registerCustomerController.verifyCode = async (req, res) => {
+registerClientsController.verifyCode = async (req, res) => {
   try {
     //Solicitamos el código que el usuario escribió en el frontend
     const { verificationCodeRequest } = req.body;
@@ -119,7 +119,7 @@ registerCustomerController.verifyCode = async (req, res) => {
     }
 
     //Si todo está bien, y el usuario, lo registramos en la DB
-    const newClient = customerModel({
+    const newClient = clienteModel({
      nombre,
         email,
         password,
@@ -132,11 +132,11 @@ registerCustomerController.verifyCode = async (req, res) => {
 
     res.clearCookie("registrationCookie");
 
-    return res.status(200).json({ message: "Customer registered" });
+    return res.status(200).json({ message: "client registered" });
   } catch (error) {
     console.log("error" + error);
     return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export default registerClientController;
+export default registerClientsController;

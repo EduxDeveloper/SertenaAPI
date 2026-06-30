@@ -15,6 +15,8 @@ import clientesRoutes from "./src/routes/clientesRoutes.js";
 //Rutas de empleados
 import empleadoRoutes from "./src/routes/empleadoRoutes.js";
 import empleadosRecoveryRoutes from "./src/routes/empleadoRecoveryRoutes.js";
+import empleadosLoginRoutes from "./src/routes/empleadoLoginRoutes.js";
+import empleadosLogOutRoutes from "./src/routes/empleadoLogOutRoutes.js";
 //Rutas de reviews
 import reviewsRoutes from "./src/routes/reviewsRoutes.js";
 
@@ -47,6 +49,8 @@ app.use("/api/clientes", clientesRoutes);
 //Rutas para empleados
 app.use("/api/empleados", empleadoRoutes);
 app.use("/api/empleadoRecovery", empleadosRecoveryRoutes);
+app.use("/api/loginEmpleado", empleadosLoginRoutes);
+app.use("/api/logoutEmpleado", empleadosLogOutRoutes);
 //Ruta para reviews
 app.use("/api/reviews", reviewsRoutes);
 

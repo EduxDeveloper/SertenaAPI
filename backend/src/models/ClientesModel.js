@@ -5,7 +5,9 @@ const clienteSchema = new Schema({
     email: { type: String},
     contraseña: { type: String},
     tipo: { type: String},
-    isVerified: { type: Boolean}
+    isVerified: { type: Boolean},
+     loginAttempts: {type: Number},
+    timeOut: {type: Date},
 }, {
     timestamps: true,
     strict: false

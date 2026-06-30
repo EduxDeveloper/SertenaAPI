@@ -12,6 +12,11 @@ import servicesRoutes from "./src/routes/servicesRoutes.js";
 import proyectRoutes from "./src/routes/proyectRoutes.js";
 //Rutas de clientes
 import clientesRoutes from "./src/routes/clientesRoutes.js";
+import clientesLoginRoutes from "./src/routes/clientesLoginRoutes.js"
+import clientesLogOutRoutes from "./src/routes/clientesLogoutRoutes.js"
+import clientesLogOutRoutes from "./src/routes/clientesLogoutRoutes.js"
+import clientesRecoveryRoutes from "./src/routes/clientesRecoveryRoutes.js"
+import clientesRegisterRoutes from "./src/routes/clientesRegisterRoutes"
 //Rutas de empleados
 import empleadoRoutes from "./src/routes/empleadoRoutes.js";
 import empleadosRecoveryRoutes from "./src/routes/empleadoRecoveryRoutes.js";
@@ -46,6 +51,12 @@ app.use("/api/services", servicesRoutes);
 app.use("/api/proyects", proyectRoutes);
 //Ruta para clientes
 app.use("/api/clientes", clientesRoutes);
+app.use("/api/clienteRecovery", clientesRecoveryRoutes);
+app.use("/api/loginCliente", clientesLoginRoutes);
+app.use("/api/logoutCliente", clientesLogOutRoutes);
+app.use("/api/registerCliente", clientesRegisterRoutes);
+
+
 //Rutas para empleados
 app.use("/api/empleados", empleadoRoutes);
 app.use("/api/empleadoRecovery", empleadosRecoveryRoutes);

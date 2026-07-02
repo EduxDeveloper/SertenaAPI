@@ -14,9 +14,8 @@ import proyectRoutes from "./src/routes/proyectRoutes.js";
 import clientesRoutes from "./src/routes/clientesRoutes.js";
 import clientesLoginRoutes from "./src/routes/clientesLoginRoutes.js"
 import clientesLogOutRoutes from "./src/routes/clientesLogoutRoutes.js"
-import clientesLogOutRoutes from "./src/routes/clientesLogoutRoutes.js"
 import clientesRecoveryRoutes from "./src/routes/clientesRecoveryRoutes.js"
-import clientesRegisterRoutes from "./src/routes/clientesRegisterRoutes"
+import clientesRegisterRoutes from "./src/routes/clientesRegisterRoutes.js"
 //Rutas de empleados
 import empleadoRoutes from "./src/routes/empleadoRoutes.js";
 import empleadosRecoveryRoutes from "./src/routes/empleadoRecoveryRoutes.js";

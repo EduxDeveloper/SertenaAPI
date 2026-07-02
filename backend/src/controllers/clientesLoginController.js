@@ -18,7 +18,7 @@ clientesLoginController.login = async (req, res) => {
 
         //Si no existe el correo
         if (!clienteFound) {
-            return res.status(400).json({ message: "Employee not found" });
+            return res.status(400).json({ message: "Client not found" });
         }
 
         //Validar la contraseña
@@ -50,4 +50,4 @@ clientesLoginController.login = async (req, res) => {
 };
 
 
-export default empleadosLoginController;
+export default clientesLoginController;

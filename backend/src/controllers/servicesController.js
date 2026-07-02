@@ -18,14 +18,19 @@ servicesController.getServices = async (req, res) => {
 servicesController.createServices = async (req, res) => {
 
     try {
-        const { nameService, imgUrl, description, price } = req.body;
+        const { nameService, description, price, status } = req.body;
+
+        if (!nameService || !description || !price || !req.file) {
+            return res.status(400).json({ message: "Todos los campos (nombre, descripción, precio e imagen) son obligatorios." });
+        }
 
         const newService = new servicesModel({
             nameService,
             imgUrl: req.file.path,
             public_id: req.file.filename,
             description,
-            price
+            price,
+            status: status === 'true' || status === true
         })
 
         await newService.save();
@@ -42,7 +47,12 @@ servicesController.createServices = async (req, res) => {
 servicesController.updateServices = async (req, res) => {
 
     try {
-        const { nameService, description, price } = req.body;
+        const { nameService, description, price, status } = req.body;
+
+        if (!nameService || !description || !price) {
+            return res.status(400).json({ message: "Todos los campos (nombre, descripción y precio) son obligatorios." });
+        }
+
         const serviceFound = await servicesModel.findById(req.params.id);
 
         if (!serviceFound) {
@@ -52,7 +62,8 @@ servicesController.updateServices = async (req, res) => {
         const updateData = {
             nameService,
             description,
-            price
+            price,
+            status: status === 'true' || status === true
         }
 
         if (req.file) {

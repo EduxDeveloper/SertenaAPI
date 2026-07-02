@@ -12,7 +12,8 @@ const serviceSchema = new Schema({
     imgUrl: { type: String },
     public_id: { type: String },
     description: { type: String },
-    price: { type: Number }
+    price: { type: Number },
+    status: { type: Boolean, default: true }
 }, {
     timestamps: true,
     strict: false

@@ -24,6 +24,10 @@ clientesLoginController.login = async (req, res) => {
         //Validar la contraseña
         const isMatch = await bcrypt.compare(contraseña, clienteFound.contraseña);
 
+        //Si la contraseña está incorrecta
+        if (!isMatch) {
+            return res.status(401).json({ message: "Wrong password" });
+        }
 
         //Generar el token
         const token = jsonwebtoken.sign(

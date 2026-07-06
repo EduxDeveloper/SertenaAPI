@@ -5,8 +5,9 @@ import bcryptjs from "bcryptjs"; //Encriptar contraseña
 
 import clienteModel from "../models/clientesModel.js";
 
+
 import { config } from "../../config.js";
-import { register } from "module";
+
 
 //array de funciones
 const registerClientsController = {};
@@ -17,7 +18,7 @@ registerClientsController.register = async (req, res) => {
     const {
       nombre,
       email,
-      password,
+      contraseña,
       tipo,
       isVerified,
       loginAttempts,
@@ -30,8 +31,12 @@ registerClientsController.register = async (req, res) => {
       return res.status(400).json({ message: "Client already exists " });
     }
 
+    if (!contraseña) {
+      return res.status(400).json({ message: "Password is required" });
+    }
+
     //Encriptar la contraseña
-    const passwordHashed = await bcryptjs.hash(password, 10);
+    const passwordHashed = await bcryptjs.hash(contraseña, 10);
 
     //Generar un código aleatorio
     const randomCode = crypto.randomBytes(3).toString("hex");
@@ -43,7 +48,8 @@ registerClientsController.register = async (req, res) => {
         randomCode,
         nombre,
         email,
-        password: passwordHashed,
+        contraseña: passwordHashed,
+        tipo,
         isVerified,
         loginAttempts,
         timeOut,
@@ -108,7 +114,8 @@ registerClientsController.verifyCode = async (req, res) => {
       randomCode: storedCode,
         nombre,
         email,
-        password,
+        contraseña,
+        tipo,
         isVerified,
         loginAttempts,
         timeOut,
@@ -122,7 +129,8 @@ registerClientsController.verifyCode = async (req, res) => {
     const newClient = clienteModel({
      nombre,
         email,
-        password,
+        contraseña,
+        tipo: tipo || "persona",
         loginAttempts,
         timeOut,
       isVerified: true,

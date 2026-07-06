@@ -42,7 +42,14 @@ clientesLoginController.login = async (req, res) => {
         //El token lo guardamos en una cokie
         res.cookie("authClienteCookie", token, { maxAge: 30 * 24 * 60 * 60 * 1000 });
 
-        return res.status(200).json({ message: "Login successfully" });
+        return res.status(200).json({ 
+            message: "Login successfully",
+            data: {
+                id: clienteFound._id,
+                nombre: clienteFound.nombre,
+                email: clienteFound.email
+            }
+        });
     } catch (error) {
         console.log("error" + error);
         return res.status(500).json({ message: "Internal server error" });

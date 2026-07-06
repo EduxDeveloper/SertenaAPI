@@ -133,7 +133,7 @@ recoveryController.newPassword = async (req, res) => {
         //Actualizar la contraseña en la base de datos
         await clientesModel.findOneAndUpdate(
             { email: decoded.email },
-            { password: passwordHash },
+            { contraseña: passwordHash },
             { new: true },
         );
 

@@ -3,7 +3,9 @@ import proyectsModel from "../models/proyectsModel.js";
 const proyectsController = {}
 
 proyectsController.getProyects = async (req, res) => {
-    const proyects = await proyectsModel.find();
+    const proyects = await proyectsModel.find()
+        .populate("idService", "nameService")
+        .populate("idCustomer", "nombre");
     res.json(proyects);
 };
 
@@ -63,6 +65,8 @@ proyectsController.searchByDate = async (req, res) => {
       //dateEnd sea mayor o igual a la fecha seleccionada
       dateEnd: { $gte: selectDate}
     })
+    .populate("idService", "nameService")
+    .populate("idCustomer", "nombre");
     // Si no se encontraron citas para la fexha seleccionada
     if(proyects.length === 0){
       return res.status(404).json({message: "no hay citas para esta fecha"});

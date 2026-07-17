@@ -5,7 +5,7 @@ const empleadoController = {};
 
 empleadoController.crearEmpleado = async (req, res) => {
     try {
-        let { nombre, apellido, email, contraseña, salario, estado } = req.body;
+        let { nombre, apellido, email, contraseña, salario, estado, services } = req.body;
 
         nombre = nombre?.trim();
         apellido = apellido?.trim();
@@ -30,7 +30,8 @@ empleadoController.crearEmpleado = async (req, res) => {
             email,
             contraseña: contraseñaHasheada,
             salario,
-            estado: estado || "activo"
+            estado: estado || "activo",
+            services: services || []
         });
 
         await nuevoEmpleado.save();
@@ -43,7 +44,7 @@ empleadoController.crearEmpleado = async (req, res) => {
 
 empleadoController.obtenerEmpleados = async (req, res) => {
     try {
-        const empleados = await empleadoModel.find();
+        const empleados = await empleadoModel.find().populate("services", "nameService");
         return res.status(200).json(empleados);
     } catch (error) {
         console.log("error " + error);
@@ -68,7 +69,7 @@ empleadoController.eliminarEmpleado = async (req, res) => {
 
 empleadoController.actualizarEmpleado = async (req, res) => {
     try {
-        let { nombre, apellido, email, contraseña, salario, estado } = req.body;
+        let { nombre, apellido, email, contraseña, salario, estado, services } = req.body;
 
         nombre = nombre?.trim();
         apellido = apellido?.trim();
@@ -83,7 +84,8 @@ empleadoController.actualizarEmpleado = async (req, res) => {
             apellido,
             email,
             salario,
-            estado
+            estado,
+            services
         };
 
         if (contraseña) {

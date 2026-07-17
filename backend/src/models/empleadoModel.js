@@ -6,7 +6,8 @@ const empleadoSchema = new Schema({
     email: { type: String },
     password: { type: String },
     salary: { type: Number },
-    status: { type: String }
+    status: { type: String },
+    services: [{ type: Schema.Types.ObjectId, ref: 'Service' }]
 }, {
     timestamps: true,
     strict: false

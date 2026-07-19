@@ -1,5 +1,6 @@
 import clienteModel from "../models/clientesModel.js";
 import bcrypt from "bcryptjs";
+import { v2 as cloudinary } from "cloudinary";
 
 const clienteController = {};
 
@@ -51,11 +52,22 @@ clienteController.obtenerClientes = async (req, res) => {
 
 clienteController.eliminarCliente = async (req, res) => {
   try {
-    const clienteEliminado = await clienteModel.findByIdAndDelete(req.params.id);
+    // Validar autorización: el ID debe coincidir con el token, o ser admin
+    if (req.userId !== req.params.id && req.userType !== "admin") {
+      return res.status(403).json({ message: "No autorizado para eliminar esta cuenta" });
+    }
 
-    if (!clienteEliminado) {
+    const clienteFound = await clienteModel.findById(req.params.id);
+    if (!clienteFound) {
       return res.status(404).json({ message: "Cliente no encontrado" });
     }
+
+    // Eliminar la imagen de Cloudinary si existe
+    if (clienteFound.public_id) {
+      await cloudinary.uploader.destroy(clienteFound.public_id);
+    }
+
+    await clienteModel.findByIdAndDelete(req.params.id);
 
     return res.status(200).json({ message: "Cliente eliminado" });
   } catch (error) {
@@ -66,13 +78,24 @@ clienteController.eliminarCliente = async (req, res) => {
 
 clienteController.actualizarCliente = async (req, res) => {
   try {
-    let { nombre, email, contraseña, tipo, isVerified } = req.body;
+    // Validar autorización
+    if (req.userId !== req.params.id && req.userType !== "admin") {
+      return res.status(403).json({ message: "No autorizado para actualizar esta cuenta" });
+    }
+
+    let { nombre, email, tipo, isVerified } = req.body;
+    let contraseña = req.body.contraseña || req.body.password;
 
     nombre = nombre?.trim();
     email = email?.trim();
 
     if (!nombre || !email) {
       return res.status(400).json({ message: "Nombre y email son requeridos" });
+    }
+
+    const clienteFound = await clienteModel.findById(req.params.id);
+    if (!clienteFound) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
     }
 
     const camposActualizar = {
@@ -88,6 +111,18 @@ clienteController.actualizarCliente = async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         camposActualizar.contraseña = await bcrypt.hash(contraseña, salt);
       }
+    }
+
+    // Si viene alguna imagen
+    if (req.file) {
+      // Eliminar la imagen anterior si existe
+      if (clienteFound.public_id) {
+        await cloudinary.uploader.destroy(clienteFound.public_id);
+      }
+
+      // Guardar la nueva imagen
+      camposActualizar.fotoPerfil = req.file.path;
+      camposActualizar.public_id = req.file.filename;
     }
 
     const clienteActualizado = await clienteModel.findByIdAndUpdate(

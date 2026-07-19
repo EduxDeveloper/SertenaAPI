@@ -6,8 +6,10 @@ const clienteSchema = new Schema({
     contraseña: { type: String},
     tipo: { type: String},
     isVerified: { type: Boolean},
-     loginAttempts: {type: Number},
+    loginAttempts: {type: Number},
     timeOut: {type: Date},
+    fotoPerfil: { type: String, default: "" },
+    public_id: { type: String, default: "" },
 }, {
     timestamps: true,
     strict: false

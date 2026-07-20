@@ -52,6 +52,27 @@ empleadoController.obtenerEmpleados = async (req, res) => {
     }
 };
 
+empleadoController.obtenerEmpleadosPaginados = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 4;
+        const skip = (page - 1) * limit;
+
+        const empleados = await empleadoModel.find().populate("services", "nameService").skip(skip).limit(limit);
+        const total = await empleadoModel.countDocuments();
+
+        return res.status(200).json({
+            data: empleados,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
+    } catch (error) {
+        console.log("error " + error);
+        return res.status(500).json({ message: "Error interno del servidor" });
+    }
+};
+
 empleadoController.eliminarEmpleado = async (req, res) => {
     try {
         const empleadoEliminado = await empleadoModel.findByIdAndDelete(req.params.id);

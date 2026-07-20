@@ -7,6 +7,7 @@ const router = Router();
 
 router.post("/crear", clienteController.crearCliente);
 router.get("/obtener", clienteController.obtenerClientes);
+router.get("/paginado", clienteController.obtenerClientesPaginados);
 router.put("/actualizar/:id", verifyToken, upload.single("image"), clienteController.actualizarCliente);
 router.delete("/eliminar/:id", verifyToken, clienteController.eliminarCliente);
 

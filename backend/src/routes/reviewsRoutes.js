@@ -7,6 +7,8 @@ router.route("/")
     .get(reviewsController.getReviews)
     .post(reviewsController.insertReviews);
 
+router.get("/paginado", reviewsController.getReviewsPaginated);
+
 router.route("/:id")
     .delete(reviewsController.deleteReviews)
     .put(reviewsController.updateReviews);

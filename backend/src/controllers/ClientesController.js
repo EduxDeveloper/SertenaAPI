@@ -50,6 +50,27 @@ clienteController.obtenerClientes = async (req, res) => {
   }
 };
 
+clienteController.obtenerClientesPaginados = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+    const skip = (page - 1) * limit;
+
+    const clientes = await clienteModel.find().skip(skip).limit(limit);
+    const total = await clienteModel.countDocuments();
+
+    return res.status(200).json({
+      data: clientes,
+      total,
+      page,
+      totalPages: Math.ceil(total / limit)
+    });
+  } catch (error) {
+    console.log("error " + error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
 clienteController.eliminarCliente = async (req, res) => {
   try {
     // Validar autorización: el ID debe coincidir con el token, o ser admin

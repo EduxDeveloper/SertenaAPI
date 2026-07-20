@@ -6,7 +6,13 @@ const servicesController = {}
 //Select All Services
 servicesController.getServices = async (req, res) => {
     try {
-        const services = await servicesModel.find();
+        const { active } = req.query;
+        let query = {};
+        if (active === 'true') {
+            query.status = true;
+        }
+        
+        const services = await servicesModel.find(query);
         return res.status(200).json(services);
     } catch (error) {
         console.log(`Error al obtener los servicios: ${error}`);

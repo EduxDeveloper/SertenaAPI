@@ -12,6 +12,27 @@ reviewsController.getReviews = async (req, res) => {
 }
 };
 
+reviewsController.getReviewsPaginated = async (req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 4;
+        const skip = (page - 1) * limit;
+
+        const reviews = await reviesModel.find().skip(skip).limit(limit);
+        const total = await reviesModel.countDocuments();
+
+        return res.status(200).json({
+            data: reviews,
+            total,
+            page,
+            totalPages: Math.ceil(total / limit)
+        });
+    } catch (error) {
+        console.log("error"+error)
+        res.status(500).json({message: "internal server error"});
+    }
+};
+
 reviewsController.insertReviews = async (req, res) => {
     try {
     const {idCustomer, idService, rating, comment} = req.body;

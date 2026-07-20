@@ -5,6 +5,7 @@ const router = Router();
 
 router.post("/crear", empleadoController.crearEmpleado);
 router.get("/obtener", empleadoController.obtenerEmpleados);
+router.get("/paginado", empleadoController.obtenerEmpleadosPaginados);
 router.put("/actualizar/:id", empleadoController.actualizarEmpleado);
 router.delete("/eliminar/:id", empleadoController.eliminarEmpleado);
 

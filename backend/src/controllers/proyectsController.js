@@ -1,4 +1,5 @@
 import proyectsModel from "../models/proyectsModel.js";
+import servicesModel from "../models/servicesModel.js";
 
 const proyectsController = {}
 
@@ -12,6 +13,12 @@ proyectsController.getProyects = async (req, res) => {
 proyectsController.insertProyects = async (req, res) => {
   try {
     const {idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,description} = req.body;
+    
+    const service = await servicesModel.findById(idService);
+    if (!service || service.status !== true) {
+        return res.status(400).json({message: "No se puede generar una cita con un servicio inactivo o inexistente."});
+    }
+
     const newProyect = new proyectsModel({idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,description});
     await newProyect.save();
     res.json({message: "Proyect saved"})
@@ -34,6 +41,11 @@ proyectsController.deleteProyects = async (req, res) => {
 proyectsController.updateProyects = async (req, res) => {
     try {
     const {idService,idCustomer,dateStart,dateEnd,clientPhone,clientDirection,clientLocation,finalPrice,status,description} = req.body;
+
+    const service = await servicesModel.findById(idService);
+    if (!service || service.status !== true) {
+        return res.status(400).json({message: "No se puede actualizar una cita con un servicio inactivo o inexistente."});
+    }
 
     await proyectsModel.findByIdAndUpdate(
         req.params.id,

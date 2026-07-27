@@ -6,7 +6,8 @@ const empleadoSchema = new Schema({
     email: { type: String },
     password: { type: String },
     salary: { type: Number },
-    status: { type: String },
+    // Solo los empleados con status: true pueden recibir citas automáticas.
+    status: { type: Boolean, default: true },
     services: [{ type: Schema.Types.ObjectId, ref: 'Service' }]
 }, {
     timestamps: true,

@@ -4,7 +4,7 @@ const reviewsController = {};
 
 reviewsController.getReviews = async (req, res) => {
     try{
-    const reviews = await reviesModel.find();
+    const reviews = await reviesModel.find().populate("idCustomer", "nombre");
     res.json(reviews);
 } catch (error) {
     console.log("error"+error)
@@ -18,7 +18,10 @@ reviewsController.getReviewsPaginated = async (req, res) => {
         const limit = parseInt(req.query.limit) || 4;
         const skip = (page - 1) * limit;
 
-        const reviews = await reviesModel.find().skip(skip).limit(limit);
+        const reviews = await reviesModel.find()
+            .populate("idCustomer", "nombre")
+            .skip(skip)
+            .limit(limit);
         const total = await reviesModel.countDocuments();
 
         return res.status(200).json({

@@ -5,7 +5,7 @@ const empleadoController = {};
 
 empleadoController.crearEmpleado = async (req, res) => {
     try {
-        let { nombre, apellido, email, contraseña, salario, estado, services } = req.body;
+        let { nombre, apellido, email, contraseña, salario, status = true, services } = req.body;
 
         nombre = nombre?.trim();
         apellido = apellido?.trim();
@@ -30,7 +30,7 @@ empleadoController.crearEmpleado = async (req, res) => {
             email,
             contraseña: contraseñaHasheada,
             salario,
-            estado: estado || "activo",
+            status: status === true,
             services: services || []
         });
 
@@ -90,7 +90,7 @@ empleadoController.eliminarEmpleado = async (req, res) => {
 
 empleadoController.actualizarEmpleado = async (req, res) => {
     try {
-        let { nombre, apellido, email, contraseña, salario, estado, services } = req.body;
+        let { nombre, apellido, email, contraseña, salario, status, services } = req.body;
 
         nombre = nombre?.trim();
         apellido = apellido?.trim();
@@ -105,9 +105,12 @@ empleadoController.actualizarEmpleado = async (req, res) => {
             apellido,
             email,
             salario,
-            estado,
             services
         };
+
+        if (typeof status === "boolean") {
+            camposActualizar.status = status;
+        }
 
         if (contraseña) {
             contraseña = contraseña.trim();

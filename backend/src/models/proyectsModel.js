@@ -13,6 +13,10 @@ const proyectSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "Cliente"
     },
+    idEmpleado: {
+        type: Schema.Types.ObjectId,
+        ref: "Empleados"
+    },
     dateStart: { type: Date },
     dateEnd: { type: Date },
     clientPhone: { type: String },

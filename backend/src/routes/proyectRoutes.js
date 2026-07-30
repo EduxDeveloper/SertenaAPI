@@ -6,7 +6,9 @@ const router = express.Router();
 router.route("/")
     .get(proyectsController.getProyects)
     .post(proyectsController.insertProyects)
-    
+
+router.get("/paginado", proyectsController.getProyectsPaginated)
+
 
 router.route("/:id")
 .put(proyectsController.updateProyects)

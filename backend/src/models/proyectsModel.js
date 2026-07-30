@@ -23,7 +23,14 @@ const proyectSchema = new Schema({
     clientDirection: { type: String },
     clientLocation: { type: String },
     finalPrice: { type: String },
-    status: { type: String },
+    status: {
+        type: String,
+        enum: ["Programado", "Finalizado", "Atrasado"],
+        default: "Programado"
+    },
+    isCompleted: { type: Boolean, default: false },
+    completionNotes: { type: String, default: "" },
+    completedAt: { type: Date, default: null },
     description: { type: String },
 }, {
     timestamps: true,

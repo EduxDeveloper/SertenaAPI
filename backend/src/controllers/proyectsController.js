@@ -4,6 +4,7 @@ import empleadoModel from "../models/empleadoModel.js";
 
 const MAX_CITAS_POR_EMPLEADO_Y_DIA = 3;
 const DIAS_MAXIMOS_DE_BUSQUEDA = 30;
+const APPOINTMENT_STATUSES = ["Programado", "Finalizado", "Atrasado"];
 
 const startOfUtcDay = (date) => new Date(Date.UTC(
     date.getUTCFullYear(),
@@ -29,15 +30,59 @@ const validateWeekday = (value) => {
     return !Number.isNaN(date.getTime()) && !isWeekend(date);
 };
 
+const normalizeAppointmentStatuses = async () => {
+    const today = startOfUtcDay(new Date());
+
+    await proyectsModel.updateMany(
+        { status: "Pendiente" },
+        { $set: { status: "Programado" } }
+    );
+    await proyectsModel.updateMany(
+        { status: "Programado", dateEnd: { $lt: today } },
+        { $set: { status: "Atrasado" } }
+    );
+};
+
 const proyectsController = {};
 
 proyectsController.getProyects = async (req, res) => {
     try {
+        await normalizeAppointmentStatuses();
         const proyects = await proyectsModel.find()
             .populate("idService", "nameService")
             .populate("idCustomer", "nombre")
             .populate("idEmpleado", "nombre apellido name lastName");
         return res.json(proyects);
+    } catch (error) {
+        console.log("error" + error);
+        return res.status(500).json({ message: "internal server error" });
+    }
+};
+
+proyectsController.getProyectsPaginated = async (req, res) => {
+    try {
+        const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
+        const skip = (page - 1) * limit;
+
+        await normalizeAppointmentStatuses();
+        const [proyects, total] = await Promise.all([
+            proyectsModel.find()
+                .populate("idService", "nameService")
+                .populate("idCustomer", "nombre")
+                .populate("idEmpleado", "nombre apellido name lastName")
+                .sort({ dateStart: 1, createdAt: -1 })
+                .skip(skip)
+                .limit(limit),
+            proyectsModel.countDocuments()
+        ]);
+
+        return res.status(200).json({
+            data: proyects,
+            total,
+            page,
+            totalPages: Math.max(Math.ceil(total / limit), 1)
+        });
     } catch (error) {
         console.log("error" + error);
         return res.status(500).json({ message: "internal server error" });
@@ -61,12 +106,12 @@ proyectsController.insertProyects = async (req, res) => {
             return res.status(400).json({ message: "No se puede generar una cita con un servicio inactivo o inexistente." });
         }
 
-        const pendingAppointments = await proyectsModel.countDocuments({
+        const activeAppointments = await proyectsModel.countDocuments({
             idCustomer,
-            status: /^pendiente$/i
+            status: { $nin: ["Finalizado"] }
         });
-        if (pendingAppointments >= 3) {
-            return res.status(400).json({ message: "No puedes tener más de 3 citas pendientes." });
+        if (activeAppointments >= 3) {
+            return res.status(400).json({ message: "No puedes tener más de 3 citas activas." });
         }
 
         // Un empleado elegible debe estar activo y prestar el servicio solicitado.
@@ -127,7 +172,7 @@ proyectsController.insertProyects = async (req, res) => {
             clientDirection,
             clientLocation,
             finalPrice,
-            status: "Pendiente",
+            status: "Programado",
             description
         });
         await newProyect.save();
@@ -170,6 +215,11 @@ proyectsController.updateProyects = async (req, res) => {
             description
         } = req.body;
 
+        const existingProyect = await proyectsModel.findById(req.params.id);
+        if (!existingProyect) {
+            return res.status(404).json({ message: "Cita no encontrada." });
+        }
+
         const service = await servicesModel.findById(idService);
         if (!service || service.status !== true) {
             return res.status(400).json({ message: "No se puede actualizar una cita con un servicio inactivo o inexistente." });
@@ -179,7 +229,8 @@ proyectsController.updateProyects = async (req, res) => {
             return res.status(400).json({ message: "No se pueden programar citas en sábado o domingo." });
         }
 
-        if (idEmpleado) {
+        const employeeChanged = idEmpleado && String(idEmpleado) !== String(existingProyect.idEmpleado);
+        if (employeeChanged) {
             const employee = await empleadoModel.findOne({
                 _id: idEmpleado,
                 status: true,
@@ -188,6 +239,17 @@ proyectsController.updateProyects = async (req, res) => {
             if (!employee) {
                 return res.status(400).json({ message: "El empleado debe estar activo y prestar el servicio seleccionado." });
             }
+        }
+
+        const requestedStatus = status === "Pendiente" ? "Programado" : status;
+        if (!APPOINTMENT_STATUSES.includes(requestedStatus)) {
+            return res.status(400).json({ message: "El estado de la cita no es válido." });
+        }
+
+        const isCompleted = req.body.isCompleted === true || requestedStatus === "Finalizado";
+        const completionNotes = String(req.body.completionNotes || "").trim();
+        if (isCompleted && !completionNotes) {
+            return res.status(400).json({ message: "Agrega las observaciones para finalizar la cita." });
         }
 
         const updatedProyect = await proyectsModel.findByIdAndUpdate(
@@ -202,15 +264,15 @@ proyectsController.updateProyects = async (req, res) => {
                 clientDirection,
                 clientLocation,
                 finalPrice,
-                status,
+                status: isCompleted ? "Finalizado" : requestedStatus,
+                isCompleted,
+                completionNotes: isCompleted ? completionNotes : "",
+                completedAt: isCompleted ? (existingProyect.completedAt || new Date()) : null,
                 description
             },
             { new: true, runValidators: true }
         ).populate("idEmpleado", "nombre apellido name lastName");
 
-        if (!updatedProyect) {
-            return res.status(404).json({ message: "Cita no encontrada." });
-        }
         return res.json({ message: "Proyect Updated", data: updatedProyect });
     } catch (error) {
         console.log("error" + error);
@@ -220,6 +282,7 @@ proyectsController.updateProyects = async (req, res) => {
 
 proyectsController.searchByDate = async (req, res) => {
     try {
+        await normalizeAppointmentStatuses();
         const { date } = req.body;
         const selectDate = new Date(date);
 

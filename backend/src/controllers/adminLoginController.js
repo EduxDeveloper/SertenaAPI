@@ -40,7 +40,12 @@ loginAdminController.login = async (req, res) => {
         );
 
         //El token lo guardamos en una cokie
-        res.cookie("authAdminCookie", token, { maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.cookie("authAdminCookie", token, {
+            maxAge: 30 * 24 * 60 * 60 * 1000,
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+        });
 
         return res.status(200).json({ message: "Login successfully" });
     } catch (error) {

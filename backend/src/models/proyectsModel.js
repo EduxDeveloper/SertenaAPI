@@ -22,6 +22,11 @@ const proyectSchema = new Schema({
     clientPhone: { type: String },
     clientDirection: { type: String },
     clientLocation: { type: String },
+    clientCoordinates: {
+        latitude: { type: Number },
+        longitude: { type: Number }
+    },
+    clientMapUrl: { type: String },
     finalPrice: { type: String },
     status: {
         type: String,

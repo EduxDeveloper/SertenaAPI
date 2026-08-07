@@ -6,6 +6,7 @@ import adminRoutes from "./src/routes/adminRoutes.js";
 import adminRecoveryRoutes from "./src/routes/adminRecoveryRoutes.js";
 import adminLoginRoutes from "./src/routes/adminLoginRoutes.js"
 import adminLogoutRoutes from "./src/routes/adminLogoutRoutes.js";
+import adminSettingsRoutes from "./src/routes/adminSettingsRoutes.js";
 //Rutas de servicios
 import servicesRoutes from "./src/routes/servicesRoutes.js";
 //Ruta de citas/proyectos
@@ -44,6 +45,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/adminRecovery", adminRecoveryRoutes);
 app.use("/api/adminLogin", adminLoginRoutes);
 app.use("/api/adminLogout", adminLogoutRoutes);
+app.use("/api/adminSettings", adminSettingsRoutes);
 //Ruta para servicios
 app.use("/api/services", servicesRoutes);
 //citas/proyectos

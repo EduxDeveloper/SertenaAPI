@@ -30,6 +30,38 @@ const validateWeekday = (value) => {
     return !Number.isNaN(date.getTime()) && !isWeekend(date);
 };
 
+const normalizeCoordinates = (coordinates) => {
+    if (!coordinates || coordinates.latitude === undefined || coordinates.longitude === undefined) return null;
+
+    const latitude = Number(coordinates.latitude);
+    const longitude = Number(coordinates.longitude);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
+        return undefined;
+    }
+
+    return { latitude, longitude };
+};
+
+const isSafeMapUrl = (value) => {
+    if (!value) return true;
+    try {
+        const url = new URL(value);
+        return url.protocol === "https:" || url.protocol === "http:";
+    } catch {
+        return false;
+    }
+};
+
+const isSameUtcDay = (firstValue, secondValue) => {
+    const firstDate = new Date(firstValue);
+    const secondDate = new Date(secondValue);
+    if (Number.isNaN(firstDate.getTime()) || Number.isNaN(secondDate.getTime())) return false;
+
+    return firstDate.getUTCFullYear() === secondDate.getUTCFullYear()
+        && firstDate.getUTCMonth() === secondDate.getUTCMonth()
+        && firstDate.getUTCDate() === secondDate.getUTCDate();
+};
+
 const normalizeAppointmentStatuses = async () => {
     const today = startOfUtcDay(new Date());
 
@@ -97,6 +129,8 @@ proyectsController.insertProyects = async (req, res) => {
             clientPhone,
             clientDirection,
             clientLocation,
+            clientCoordinates,
+            clientMapUrl,
             finalPrice,
             description
         } = req.body;
@@ -104,6 +138,11 @@ proyectsController.insertProyects = async (req, res) => {
         const service = await servicesModel.findById(idService);
         if (!service || service.status !== true) {
             return res.status(400).json({ message: "No se puede generar una cita con un servicio inactivo o inexistente." });
+        }
+
+        const coordinates = normalizeCoordinates(clientCoordinates);
+        if (coordinates === undefined || !isSafeMapUrl(clientMapUrl)) {
+            return res.status(400).json({ message: "La ubicación geográfica no es válida." });
         }
 
         const activeAppointments = await proyectsModel.countDocuments({
@@ -171,6 +210,8 @@ proyectsController.insertProyects = async (req, res) => {
             clientPhone,
             clientDirection,
             clientLocation,
+            clientCoordinates: coordinates || undefined,
+            clientMapUrl: clientMapUrl || "",
             finalPrice,
             status: "Programado",
             description
@@ -210,6 +251,8 @@ proyectsController.updateProyects = async (req, res) => {
             clientPhone,
             clientDirection,
             clientLocation,
+            clientCoordinates,
+            clientMapUrl,
             finalPrice,
             status,
             description
@@ -220,12 +263,19 @@ proyectsController.updateProyects = async (req, res) => {
             return res.status(404).json({ message: "Cita no encontrada." });
         }
 
+        const coordinates = normalizeCoordinates(clientCoordinates);
+        if (coordinates === undefined || !isSafeMapUrl(clientMapUrl)) {
+            return res.status(400).json({ message: "La ubicación geográfica no es válida." });
+        }
+
         const service = await servicesModel.findById(idService);
         if (!service || service.status !== true) {
             return res.status(400).json({ message: "No se puede actualizar una cita con un servicio inactivo o inexistente." });
         }
 
-        if (!validateWeekday(dateStart) || !validateWeekday(dateEnd)) {
+        const datesChanged = !isSameUtcDay(dateStart, existingProyect.dateStart)
+            || !isSameUtcDay(dateEnd, existingProyect.dateEnd);
+        if (datesChanged && (!validateWeekday(dateStart) || !validateWeekday(dateEnd))) {
             return res.status(400).json({ message: "No se pueden programar citas en sábado o domingo." });
         }
 
@@ -263,6 +313,8 @@ proyectsController.updateProyects = async (req, res) => {
                 clientPhone,
                 clientDirection,
                 clientLocation,
+                ...(coordinates && { clientCoordinates: coordinates }),
+                ...(clientMapUrl !== undefined && { clientMapUrl }),
                 finalPrice,
                 status: isCompleted ? "Finalizado" : requestedStatus,
                 isCompleted,

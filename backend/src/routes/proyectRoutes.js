@@ -1,17 +1,17 @@
 import express from "express";
 import proyectsController from "../controllers/proyectsController.js";
-import { verifyToken, verifyAdminToken } from "../middlewares/authMiddleware.js";
+import { verifyToken, verifyAdminToken, verifyStaffToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.route("/")
-    .get(verifyAdminToken, proyectsController.getProyects)
+    .get(verifyStaffToken, proyectsController.getProyects)
     .post(verifyToken, proyectsController.insertProyects)
 
 router.get("/paginado", verifyAdminToken, proyectsController.getProyectsPaginated)
 
 router.route("/:id")
-    .put(verifyAdminToken, proyectsController.updateProyects)
+    .put(verifyStaffToken, proyectsController.updateProyects)
     .delete(verifyAdminToken, proyectsController.deleteProyects)
 
 router.route("/searchByDate")

@@ -1,21 +1,23 @@
 import express from 'express';
 import reviewsController from '../controllers/reviewsController.js';
+import { verifyToken, verifyAdminToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 
 router.route('/')
     .get(reviewsController.getReviews)
-    .post(reviewsController.insertReviews);
+    .post(verifyToken, reviewsController.insertReviews);
 
 router.get('/paginado', reviewsController.getReviewsPaginated);
 
 router.get(
     '/customer/:idCustomer',
+    verifyToken,
     reviewsController.getCustomerReviews
 );
 
 router.route('/:id')
-    .delete(reviewsController.deleteReviews)
-    .put(reviewsController.updateReviews);
+    .delete(verifyAdminToken, reviewsController.deleteReviews)
+    .put(verifyAdminToken, reviewsController.updateReviews);
 
 export default router;

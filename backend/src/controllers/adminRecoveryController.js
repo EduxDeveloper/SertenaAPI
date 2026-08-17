@@ -1,7 +1,7 @@
 import jsonwebtoken from "jsonwebtoken"; //Generar tokens
 import bcrypt from "bcryptjs"; //Encriptar la contraseña
 import crypto from "crypto"; //Generar códigos aleatorios
-import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
+import htmlRecoveryEmail from "../utils/HTMLRecoveryEmail.js";
 import { sendEmail } from "../utils/sendMailMailjet.js";
 
 import { config } from "../../config.js";

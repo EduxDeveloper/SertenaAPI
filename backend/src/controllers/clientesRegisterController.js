@@ -7,7 +7,7 @@ import clienteModel from "../models/clientesModel.js";
 
 import { config } from "../../config.js";
 import { clearCookieOptions, cookieOptions } from "../utils/cookieOptions.js";
-import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
+import htmlRecoveryEmail from "../utils/HTMLRecoveryEmail.js";
 import { sendEmail } from "../utils/sendMailMailjet.js";
 
 

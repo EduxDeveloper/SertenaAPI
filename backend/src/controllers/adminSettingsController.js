@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 import adminModel from "../models/adminModel.js";
-import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
+import htmlRecoveryEmail from "../utils/HTMLRecoveryEmail.js";
 import { sendEmail } from "../utils/sendMailMailjet.js";
 
 const CODE_EXPIRATION_MS = 15 * 60 * 1000;

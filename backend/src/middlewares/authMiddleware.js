@@ -1,27 +1,40 @@
-import jsonwebtoken from "jsonwebtoken";
+import jwt from "jsonwebtoken";
 import { config } from "../../config.js";
 
-export const validateAuthCookie = (allowedTypes = []) => {
-    return (req, res, next) => {
-        try {
+export const verifyToken = (req, res, next) => {
+    try {
+        const token = req.cookies.authClienteCookie;
 
-            const {authCookie} = req.cookies;
-
-            if(!authCookie) {
-                return res.status(403).json({message: "No cookie found, Authorization required"})
-            }
-
-            const decoded = jsonwebtoken.verify(authCookie, config.JWT.secret)
-
-            if(!allowedTypes.includes(decoded.userType)){
-                return res.status(401).json({message: "Access denied"})
-            }
-
-            next()
-        } catch (error) {
-            console.log("error"+error)
-            return res.status(500).json({message: "Internal server error"})
+        if (!token) {
+            return res.status(401).json({ message: "No token provided, authorization denied" });
         }
-    }
-}
 
+        const decoded = jwt.verify(token, config.JWT.secret);
+        req.userId = decoded.id;
+        req.userType = decoded.userType;
+        
+        next();
+    } catch (error) {
+        console.error("Token verification error:", error);
+        return res.status(401).json({ message: "Invalid token" });
+    }
+};
+
+export const verifyAdminToken = (req, res, next) => {
+    try {
+        const token = req.cookies.authAdminCookie;
+        if (!token) {
+            return res.status(401).json({ message: "Sesión de administrador requerida." });
+        }
+
+        const decoded = jwt.verify(token, config.JWT.secret);
+        if (decoded.userType !== "admin" || !decoded.id) {
+            return res.status(403).json({ message: "No tienes permisos para esta acción." });
+        }
+
+        req.adminId = decoded.id;
+        next();
+    } catch (error) {
+        return res.status(401).json({ message: "La sesión de administrador no es válida." });
+    }
+};

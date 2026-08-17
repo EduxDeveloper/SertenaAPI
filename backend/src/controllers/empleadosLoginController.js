@@ -24,6 +24,10 @@ empleadosLoginController.login = async (req, res) => {
         //Validar la contraseña
         const isMatch = await bcrypt.compare(password, empleadoFound.password);
 
+        // No se debe crear una sesión si la contraseña no coincide.
+        if (!isMatch) {
+            return res.status(401).json({ message: "Wrong password" });
+        }
 
         //Generar el token
         const token = jsonwebtoken.sign(

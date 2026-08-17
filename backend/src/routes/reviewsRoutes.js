@@ -3,13 +3,18 @@ import reviewsController from '../controllers/reviewsController.js';
 
 const router = express.Router();
 
-router.route("/")
+router.route('/')
     .get(reviewsController.getReviews)
     .post(reviewsController.insertReviews);
 
-router.get("/paginado", reviewsController.getReviewsPaginated);
+router.get('/paginado', reviewsController.getReviewsPaginated);
 
-router.route("/:id")
+router.get(
+    '/customer/:idCustomer',
+    reviewsController.getCustomerReviews
+);
+
+router.route('/:id')
     .delete(reviewsController.deleteReviews)
     .put(reviewsController.updateReviews);
 

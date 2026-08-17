@@ -2,7 +2,7 @@ import crypto from "crypto"; //Generar código aleatorio
 import jsonwebtoken from "jsonwebtoken"; //Token
 import bcryptjs from "bcryptjs"; //Encriptar contraseña
 
-import clienteModel from "../models/clientesModel.js";
+import clienteModel from "../models/ClientesModel.js";
 
 
 import { config } from "../../config.js";

@@ -1,4 +1,4 @@
-import clienteModel from "../models/clientesModel.js";
+import clienteModel from "../models/ClientesModel.js";
 import bcrypt from "bcryptjs";
 import { v2 as cloudinary } from "cloudinary";
 

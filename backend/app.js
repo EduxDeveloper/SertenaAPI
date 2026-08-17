@@ -14,7 +14,7 @@ import servicesRoutes from "./src/routes/servicesRoutes.js";
 //Ruta de citas/proyectos
 import proyectRoutes from "./src/routes/proyectRoutes.js";
 //Rutas de clientes
-import clientesRoutes from "./src/routes/clientesRoutes.js";
+import clientesRoutes from "./src/routes/ClientesRoutes.js";
 import clientesLoginRoutes from "./src/routes/clientesLoginRoutes.js"
 import clientesLogOutRoutes from "./src/routes/clientesLogoutRoutes.js"
 import clientesRecoveryRoutes from "./src/routes/clientesRecoveryRoutes.js"

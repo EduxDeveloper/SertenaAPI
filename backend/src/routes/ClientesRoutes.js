@@ -1,5 +1,5 @@
 import { Router } from "express";
-import clienteController from "../controllers/clientesController.js";
+import clienteController from "../controllers/ClientesController.js";
 import upload from "../utils/cloudinaryConfig.js";
 import { verifyToken, verifyAdminToken } from "../middlewares/authMiddleware.js";
 

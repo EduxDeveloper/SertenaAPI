@@ -7,8 +7,8 @@ import { sendEmail } from "../utils/sendMailMailjet.js";
 import { config } from "../../config.js";
 import { clearCookieOptions, cookieOptions } from "../utils/cookieOptions.js";
 
-import ClientesModel from "../models/clientesModel.js";
-import clientesModel from "../models/clientesModel.js";
+import ClientesModel from "../models/ClientesModel.js";
+import clientesModel from "../models/ClientesModel.js";
 
 const recoveryController = {};
 

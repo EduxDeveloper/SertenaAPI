@@ -4,7 +4,7 @@ import jsonwebtoken from "jsonwebtoken";
 import { config } from "../../config.js";
 import { cookieOptions } from "../utils/cookieOptions.js";
 
-import ClientesModel from "../models/clientesModel.js";
+import ClientesModel from "../models/ClientesModel.js";
 
 //Array de funciones
 const clientesLoginController = {};

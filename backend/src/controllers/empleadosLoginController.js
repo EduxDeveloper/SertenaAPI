@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 
 import { config } from "../../config.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 import EmpleadosModel from "../models/empleadoModel.js";
 
@@ -40,7 +41,7 @@ empleadosLoginController.login = async (req, res) => {
         );
 
         //El token lo guardamos en una cokie
-        res.cookie("authEmpleadoCookie", token, { maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.cookie("authEmpleadoCookie", token, cookieOptions(30 * 24 * 60 * 60 * 1000));
 
         return res.status(200).json({ message: "Login successfully" });
     } catch (error) {

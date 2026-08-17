@@ -1,4 +1,3 @@
-import nodemailer from "nodemailer"; //Enviar correos
 import crypto from "crypto"; //Generar código aleatorio
 import jsonwebtoken from "jsonwebtoken"; //Token
 import bcryptjs from "bcryptjs"; //Encriptar contraseña
@@ -7,6 +6,9 @@ import clienteModel from "../models/clientesModel.js";
 
 
 import { config } from "../../config.js";
+import { clearCookieOptions, cookieOptions } from "../utils/cookieOptions.js";
+import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
+import { sendEmail } from "../utils/sendMailMailjet.js";
 
 
 //array de funciones
@@ -61,38 +63,16 @@ registerClientsController.register = async (req, res) => {
     );
 
     //guardamos el token en una cookie
-    res.cookie("registrationCookie", token, { maxAge: 15 * 60 * 1000 });
+    res.cookie("registrationCookie", token, cookieOptions(15 * 60 * 1000));
 
-    //ENVIAR CORREO ELECTÓNICO
-    //#1- Transporter -> ¿Quién lo envía?
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: config.email.user_email,
-        pass: config.email.user_password,
-      },
+    const htmlContent = htmlRecoveryEmail(randomCode, {
+      title: "Verificación de cuenta",
+      message: "Hola, utiliza el siguiente código de verificación para completar la creación de tu cuenta:",
     });
 
-    //#2- mailOptions -> ¿Quíen lo recibe y cómo?
-    const mailOptions = {
-      from: config.email.user_email,
-      to: email,
-      subject: "Verificación de cuenta",
-      text:
-        "Para verificar tu cuenta, utiliza este código " +
-        randomCode +
-        " expira en 15 minutos",
-    };
+    await sendEmail(email, "Verificación de cuenta", htmlContent);
 
-    //#3- Enviar el correo electrónico
-    transporter.sendMail(mailOptions, (error, info) => {
-      if (error) {
-        console.log("error"+error);
-        return res.status(500).json({ message: "Error sending email" });
-      }
-
-      return res.status(200).json({ message: "Email sent" });
-    });
+    return res.status(200).json({ message: "Email sent" });
   } catch (error) {
     console.log("error" + error);
     return res.status(500).json({ message: "Internal server eror" });
@@ -138,7 +118,7 @@ registerClientsController.verifyCode = async (req, res) => {
 
     await newClient.save();
 
-    res.clearCookie("registrationCookie");
+    res.clearCookie("registrationCookie", clearCookieOptions);
 
     return res.status(200).json({ message: "client registered" });
   } catch (error) {

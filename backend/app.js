@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import swaggerUi from "swagger-ui-express";
+import openapiDocument from "./src/docs/openapi.js";
 //Rutas de Administrador
 import adminRoutes from "./src/routes/adminRoutes.js";
 import adminRecoveryRoutes from "./src/routes/adminRecoveryRoutes.js";
@@ -27,10 +29,23 @@ import reviewsRoutes from "./src/routes/reviewsRoutes.js";
 
 const app = express();
 
+const localOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const configuredOrigins = (process.env.CLIENT_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+const allowedOrigins = new Set([...localOrigins, ...configuredOrigins]);
+
+app.set("trust proxy", 1);
+
 app.use(
     cors({
-        origin: ["http://localhost:5173", "http://localhost:5174"],
-        //permitir el envío de cookies y credenciales
+        origin(origin, callback) {
+            if (!origin || allowedOrigins.has(origin)) {
+                return callback(null, true);
+            }
+            return callback(new Error("Origin not allowed by CORS"));
+        },
         credentials: true,
     }),
 );
@@ -39,6 +54,23 @@ app.use(cookieParser());
 
 //Para que la API acepte json
 app.use(express.json());
+
+app.get("/api/openapi.json", (_req, res) => {
+    res.json(openapiDocument);
+});
+
+app.use(
+    "/api/docs",
+    swaggerUi.serve,
+    swaggerUi.setup(openapiDocument, {
+        customSiteTitle: "SERTENA API — Documentación",
+        explorer: true,
+    }),
+);
+
+app.get("/health", (_req, res) => {
+    res.status(200).json({ status: "ok" });
+});
 
 //Rutas para Administrador
 app.use("/api/admin", adminRoutes);

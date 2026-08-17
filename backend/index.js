@@ -1,11 +1,18 @@
 import app from "./app.js";
-import "./database.js"
+import { databaseConnection } from "./database.js";
 
-//Creo una función para ejecutar
-//el servidor
-async function main() {
-    app.listen(4000)
-    console.log("Server on port 4000")
+const port = Number(process.env.PORT) || 4000;
+
+async function startServer() {
+    try {
+        await databaseConnection;
+        app.listen(port, () => {
+            console.log(`Server on port ${port}`);
+        });
+    } catch (error) {
+        console.error("Could not connect to the database", error);
+        process.exit(1);
+    }
 }
 
-main()
+startServer();

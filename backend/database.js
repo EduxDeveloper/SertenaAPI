@@ -1,29 +1,18 @@
 import mongoose from "mongoose";
-
 import { config } from "../backend/config.js";
 
-mongoose.connect(config.db.uri);
+export const databaseConnection = mongoose.connect(config.db.uri);
 
-//Contador de veces cagada +2
-//Por favor aumentar este contador cada vez que filtremos alguna variable de entorno.
-//mongoose.connect("mongodb+srv://sertenaservicios_db_user:lbWHpF93QI6k68ru@sertenacluster.ecu7ybk.mongodb.net/sertenaDB5?appName=SertenaCluster")
-//mongoose.connect("mongodb://sertenaservicios_db_user:lbWHpF93QI6k68ru@ac-kpcsjnr-shard-00-00.ecu7ybk.mongodb.net:27017,ac-kpcsjnr-shard-00-01.ecu7ybk.mongodb.net:27017,ac-kpcsjnr-shard-00-02.ecu7ybk.mongodb.net:27017/sertenaDB5?ssl=true&replicaSet=atlas-6k5qa7-shard-0&authSource=admin&appName=SertenaCluster")
-
-
-//Comprobar que todo funciona
-
-//Creo una constante que es igual a la conexión
 const connection = mongoose.connection;
 
 connection.once("open", () => {
-    console.log("DB is connected")
-})
+    console.log("DB is connected");
+});
 
 connection.on("disconnected", () => {
-    console.log("DB is disconnected")
-})
+    console.log("DB is disconnected");
+});
 
 connection.on("error", (error) => {
-    console.log("Error found" + error)
-})
-
+    console.log("Error found" + error);
+});

@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 
 import { config } from "../../config.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 import ClientesModel from "../models/clientesModel.js";
 
@@ -40,7 +41,7 @@ clientesLoginController.login = async (req, res) => {
         );
 
         //El token lo guardamos en una cokie
-        res.cookie("authClienteCookie", token, { maxAge: 30 * 24 * 60 * 60 * 1000 });
+        res.cookie("authClienteCookie", token, cookieOptions(30 * 24 * 60 * 60 * 1000));
 
         return res.status(200).json({ 
             message: "Login successfully",

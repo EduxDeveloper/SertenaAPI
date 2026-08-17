@@ -1,9 +1,8 @@
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
-import nodemailer from "nodemailer";
 import adminModel from "../models/adminModel.js";
 import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
-import { config } from "../../config.js";
+import { sendEmail } from "../utils/sendMailMailjet.js";
 
 const CODE_EXPIRATION_MS = 15 * 60 * 1000;
 const RESEND_WAIT_MS = 60 * 1000;
@@ -16,14 +15,6 @@ const clearPasswordChangeCode = {
     passwordChangeVerifiedAt: null,
     passwordChangeLastSentAt: null,
 };
-
-const getTransporter = () => nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-        user: config.email.user_email,
-        pass: config.email.user_password,
-    },
-});
 
 const isStrongPassword = (password) => (
     typeof password === "string"
@@ -52,13 +43,14 @@ const clearNewEmailCode = {
 };
 
 const sendSixDigitCode = async ({ recipient, subject, code }) => {
-    await getTransporter().sendMail({
-        from: config.email.user_email,
-        to: recipient,
+    await sendEmail(
+        recipient,
         subject,
-        text: `Tu código de verificación es ${code}. Vence en 15 minutos.`,
-        html: htmlRecoveryEmail(code),
-    });
+        htmlRecoveryEmail(code, {
+            title: subject,
+            message: `Hola, utiliza el siguiente código de verificación. Vence en 15 minutos.`,
+        }),
+    );
 };
 
 const codeIsActive = (admin, hashField, expirationField) => (
@@ -82,12 +74,10 @@ adminSettingsController.requestPasswordChangeCode = async (req, res) => {
         const code = crypto.randomInt(100000, 1000000).toString();
         const codeHash = await bcrypt.hash(code, 12);
 
-        await getTransporter().sendMail({
-            from: config.email.user_email,
-            to: admin.email,
+        await sendSixDigitCode({
+            recipient: admin.email,
             subject: "Código para cambiar la contraseña",
-            text: `Tu código de verificación es ${code}. Vence en 15 minutos.`,
-            html: htmlRecoveryEmail(code),
+            code,
         });
 
         admin.passwordChangeCodeHash = codeHash;

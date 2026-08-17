@@ -1,10 +1,11 @@
 import jsonwebtoken from "jsonwebtoken"; //Generar tokens
 import bcrypt from "bcryptjs"; //Encriptar la contraseña
 import crypto from "crypto"; //Generar códigos aleatorios
-import nodemailer from "nodemailer"; //Enviar correos
 import htmlRecoveryEmail from "../utils/htmlRecoveryEmail.js";
+import { sendEmail } from "../utils/sendMailMailjet.js";
 
 import { config } from "../../config.js";
+import { clearCookieOptions, cookieOptions } from "../utils/cookieOptions.js";
 
 import ClientesModel from "../models/clientesModel.js";
 import clientesModel from "../models/clientesModel.js";
@@ -37,35 +38,15 @@ recoveryController.requestCode = async (req, res) => {
             { expiresIn: "15m" },
         );
 
-        res.cookie("recoveryCookie", token, { maxAge: 15 * 60 * 1000 });
+        res.cookie("recoveryCookie", token, cookieOptions(15 * 60 * 1000));
 
-        //Enviar el código por correo electrónico
-        //#1- ¿Quien lo envía?
-        const transporter = nodemailer.createTransport({
-            service: "gmail",
-            auth: {
-                user: config.email.user_email,
-                pass: config.email.user_password,
-            },
-        });
+        await sendEmail(
+            email,
+            "Recuperación de contraseña",
+            htmlRecoveryEmail(randomCode),
+        );
 
-        //#2- ¿Quién lo recibe y como lo recibe?
-        const mailOptions = {
-            from: config.email.user_email,
-            to: email,
-            subject: "Recuperación de contraseña",
-            body: "El código vence en 15 minutos",
-            html: htmlRecoveryEmail(randomCode),
-        };
-
-        //#3- Enviar correo electrónico
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log("error" + error);
-                return res.status(500).json({ message: "Error sending mail" });
-            }
-            return res.status(200).json({ message: "email sent" });
-        });
+        return res.status(200).json({ message: "email sent" });
     } catch (error) {
         console.log("error" + error);
         return res.status(500).json({ message: "Internal server error" });
@@ -99,7 +80,7 @@ recoveryController.verifyCode = async (req, res) => {
             { expiresIn: "15m" },
         );
 
-        res.cookie("recoveryCookie", newToken, { maxAge: 15 * 60 * 1000 });
+        res.cookie("recoveryCookie", newToken, cookieOptions(15 * 60 * 1000));
 
         return res.status(200).json({ message: "Code verified successfully" });
     } catch (error) {
@@ -137,7 +118,7 @@ recoveryController.newPassword = async (req, res) => {
             { new: true },
         );
 
-        res.clearCookie("recoveryCookie");
+        res.clearCookie("recoveryCookie", clearCookieOptions);
 
         return res.status(200).json({ message: "Password updated" });
     } catch (error) {

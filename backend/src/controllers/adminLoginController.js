@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import jsonwebtoken from "jsonwebtoken";
 
 import { config } from "../../config.js";
+import { cookieOptions } from "../utils/cookieOptions.js";
 
 import adminModel from "../models/adminModel.js";
 
@@ -40,12 +41,7 @@ loginAdminController.login = async (req, res) => {
         );
 
         //El token lo guardamos en una cokie
-        res.cookie("authAdminCookie", token, {
-            maxAge: 30 * 24 * 60 * 60 * 1000,
-            httpOnly: true,
-            sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
-        });
+        res.cookie("authAdminCookie", token, cookieOptions(30 * 24 * 60 * 60 * 1000));
 
         return res.status(200).json({ message: "Login successfully" });
     } catch (error) {

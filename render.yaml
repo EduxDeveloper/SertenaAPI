@@ -1,0 +1,37 @@
+services:
+  - type: web
+    name: sertena-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: CLIENT_ORIGINS
+        sync: false
+      - key: DB_URI
+        sync: false
+      - key: JWT_Secret_key
+        sync: false
+      # SMTP de Gmail se conserva como referencia, pero no se usa en Render
+      # porque Render bloquea los puertos SMTP salientes.
+      # - key: USER_EMAIL
+      #   sync: false
+      # - key: USER_PASSWORD
+      #   sync: false
+      - key: API_KEY_MAILJET
+        sync: false
+      - key: API_SECRET_MAILJET
+        sync: false
+      - key: MAILJET_FROM_EMAIL
+        sync: false
+      - key: MAILJET_FROM_NAME
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false

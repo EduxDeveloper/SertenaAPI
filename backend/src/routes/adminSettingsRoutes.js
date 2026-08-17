@@ -1,6 +1,6 @@
 import express from "express";
 import adminSettingsController from "../controllers/adminSettingsController.js";
-import { verifyAdminToken } from "../utils/authMiddleware.js";
+import { verifyAdminToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
 

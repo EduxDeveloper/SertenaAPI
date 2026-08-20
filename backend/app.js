@@ -26,6 +26,8 @@ import empleadosLoginRoutes from "./src/routes/empleadoLoginRoutes.js";
 import empleadosLogOutRoutes from "./src/routes/empleadoLogOutRoutes.js";
 //Rutas de reviews
 import reviewsRoutes from "./src/routes/reviewsRoutes.js";
+//Limiter
+import limiter from "./src/middlewares/limiter.js";
 
 const app = express();
 
@@ -54,6 +56,8 @@ app.use(cookieParser());
 
 //Para que la API acepte json
 app.use(express.json());
+
+app.use(limiter); //Limite de peticiones
 
 app.get("/api/openapi.json", (_req, res) => {
     res.json(openapiDocument);

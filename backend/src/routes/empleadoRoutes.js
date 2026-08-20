@@ -1,13 +1,18 @@
 import { Router } from "express";
 import empleadoController from "../controllers/empleadoController.js";
-import { verifyAdminToken, verifyStaffToken } from "../middlewares/authMiddleware.js";
+import { validateAuthCookie } from "../middlewares/authMiddleware.js";
 
 const router = Router();
+const requireAdmin = validateAuthCookie("authAdminCookie", ["admin"]);
+const requireStaff = validateAuthCookie(
+    ["authAdminCookie", "authEmpleadoCookie"],
+    ["admin", "employee"],
+);
 
-router.post("/crear", verifyAdminToken, empleadoController.crearEmpleado);
-router.get("/obtener", verifyStaffToken, empleadoController.obtenerEmpleados);
-router.get("/paginado", verifyAdminToken, empleadoController.obtenerEmpleadosPaginados);
-router.put("/actualizar/:id", verifyAdminToken, empleadoController.actualizarEmpleado);
-router.delete("/eliminar/:id", verifyAdminToken, empleadoController.eliminarEmpleado);
+router.post("/crear", requireAdmin, empleadoController.crearEmpleado);
+router.get("/obtener", requireStaff, empleadoController.obtenerEmpleados);
+router.get("/paginado", requireAdmin, empleadoController.obtenerEmpleadosPaginados);
+router.put("/actualizar/:id", requireAdmin, empleadoController.actualizarEmpleado);
+router.delete("/eliminar/:id", requireAdmin, empleadoController.eliminarEmpleado);
 
 export default router;

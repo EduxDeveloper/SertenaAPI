@@ -239,6 +239,13 @@ const openapiDocument = {
                 parameters: pageParameters, responses: { "200": { description: "Página de citas obtenida.", content: { "application/json": { schema: { $ref: "#/components/schemas/PaginatedAppointments" } } } }, ...errorResponses },
             },
         },
+        "/api/proyects/mis-citas": {
+            get: {
+                tags: ["Citas"], operationId: "getMyAppointments", summary: "Consultar mis citas", security: clientSecurity,
+                description: description("Devuelve únicamente las citas del cliente autenticado.", "La aplicación móvil de clientes lo usa para mostrar el historial y las citas activas sin descargar ni exponer citas de otros clientes."),
+                responses: { "200": { description: "Citas del cliente obtenidas.", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Appointment" } } } } }, ...errorResponses },
+            },
+        },
         "/api/proyects/{id}": {
             put: {
                 tags: ["Citas"], operationId: "updateAppointment", summary: "Actualizar una cita", security: staffSecurity,
@@ -272,6 +279,13 @@ const openapiDocument = {
                 responses: { "200": { description: "Clientes obtenidos.", content: { "application/json": { schema: { type: "array", items: { $ref: "#/components/schemas/Client" } } } } }, ...errorResponses },
             },
         },
+        "/api/clientes/perfil": {
+            get: {
+                tags: ["Clientes"], operationId: "getClientProfile", summary: "Obtener mi perfil", security: clientSecurity,
+                description: description("Devuelve el perfil del cliente que tiene la sesión activa, sin incluir su contraseña.", "La aplicación móvil de clientes lo utiliza para cargar el avatar y los datos del perfil sin pedir el listado administrativo de clientes."),
+                responses: { "200": { description: "Perfil obtenido.", content: { "application/json": { schema: { $ref: "#/components/schemas/Client" } } } }, ...errorResponses },
+            },
+        },
         "/api/clientes/paginado": {
             get: {
                 tags: ["Clientes"], operationId: "getClientsPaginated", summary: "Listar clientes paginados", security: adminSecurity,
@@ -281,15 +295,15 @@ const openapiDocument = {
         },
         "/api/clientes/actualizar/{id}": {
             put: {
-                tags: ["Clientes"], operationId: "updateClient", summary: "Actualizar cliente", security: clientSecurity,
-                description: description("Actualiza la cuenta del cliente cuya sesión está activa. Acepta una foto de perfil opcional.", "La página Perfil de clientes envía `FormData` con nombre, correo, contraseña opcional e imagen usando `credentials: 'include'`."),
+                tags: ["Clientes"], operationId: "updateClient", summary: "Actualizar cliente", security: [{ clientCookie: [] }, { adminCookie: [] }],
+                description: description("Actualiza la cuenta del cliente cuya sesión está activa o permite que un administrador autorizado la actualice. Acepta una foto de perfil opcional.", "La página Perfil de clientes envía `FormData` con nombre, correo, contraseña opcional e imagen usando `credentials: 'include'`; el panel puede realizar correcciones con sesión administrativa."),
                 parameters: [idParameter("id", "Identificador del cliente a actualizar.")], requestBody: multipartBody({ $ref: "#/components/schemas/ClientUpdateForm" }), responses: { "200": messageResponse("Cliente actualizado."), ...errorResponses },
             },
         },
         "/api/clientes/eliminar/{id}": {
             delete: {
-                tags: ["Clientes"], operationId: "deleteClient", summary: "Eliminar cuenta de cliente", security: clientSecurity,
-                description: description("Elimina la propia cuenta del cliente autenticado.", "La opción Eliminar cuenta del perfil de cliente lo consume con `credentials: 'include'` después de una confirmación explícita."),
+                tags: ["Clientes"], operationId: "deleteClient", summary: "Eliminar cuenta de cliente", security: [{ clientCookie: [] }, { adminCookie: [] }],
+                description: description("Elimina la propia cuenta del cliente autenticado o permite la eliminación a un administrador autorizado.", "La opción Eliminar cuenta del perfil de cliente lo consume con `credentials: 'include'` después de una confirmación explícita; el panel puede usarlo para tareas administrativas."),
                 parameters: [idParameter("id", "Identificador del cliente a eliminar.")], responses: { "200": messageResponse("Cliente eliminado."), ...errorResponses },
             },
         },

@@ -50,6 +50,19 @@ clienteController.obtenerClientes = async (req, res) => {
   }
 };
 
+clienteController.obtenerPerfil = async (req, res) => {
+  try {
+    const cliente = await clienteModel.findById(req.userId).select("-contraseña");
+    if (!cliente) {
+      return res.status(404).json({ message: "Cliente no encontrado" });
+    }
+    return res.status(200).json(cliente);
+  } catch (error) {
+    console.log("error " + error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+};
+
 clienteController.obtenerClientesPaginados = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;

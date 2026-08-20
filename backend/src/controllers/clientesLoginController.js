@@ -43,8 +43,14 @@ clientesLoginController.login = async (req, res) => {
         //El token lo guardamos en una cokie
         res.cookie("authClienteCookie", token, cookieOptions(30 * 24 * 60 * 60 * 1000));
 
+        const isMobileClient = req.get("x-sertena-client") === "mobile";
+
         return res.status(200).json({ 
             message: "Login successfully",
+            // La web conserva este token exclusivamente en la cookie HttpOnly.
+            // React Native se identifica con este encabezado y recibe el token
+            // para enviarlo como Bearer entre reinicios de la aplicación.
+            ...(isMobileClient ? { accessToken: token } : {}),
             data: {
                 id: clienteFound._id,
                 nombre: clienteFound.nombre,

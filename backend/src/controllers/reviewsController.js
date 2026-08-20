@@ -62,6 +62,10 @@ reviewsController.getCustomerReviews = async (req, res) => {
     try {
         const { idCustomer } = req.params;
 
+        if (String(idCustomer) !== String(req.userId)) {
+            return res.status(403).json({ message: "No autorizado para consultar estas reseñas." });
+        }
+
         const reviews = await reviewsModel
             .find({ idCustomer })
             .populate('idService', 'nameService price description')
@@ -99,6 +103,10 @@ reviewsController.insertReviews = async (req, res) => {
             return res.status(400).json({
                 message: 'El cliente y el servicio son obligatorios.'
             });
+        }
+
+        if (String(idCustomer) !== String(req.userId)) {
+            return res.status(403).json({ message: "No autorizado para crear una reseña para otro cliente." });
         }
 
         const numericRating = Number(rating);

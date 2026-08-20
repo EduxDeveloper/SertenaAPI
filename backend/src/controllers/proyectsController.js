@@ -121,6 +121,20 @@ proyectsController.getProyectsPaginated = async (req, res) => {
     }
 };
 
+proyectsController.getMyProyects = async (req, res) => {
+    try {
+        await normalizeAppointmentStatuses();
+        const proyects = await proyectsModel.find({ idCustomer: req.userId })
+            .populate("idService", "nameService")
+            .populate("idEmpleado", "nombre apellido name lastName")
+            .sort({ dateStart: 1, createdAt: -1 });
+        return res.status(200).json(proyects);
+    } catch (error) {
+        console.log("error" + error);
+        return res.status(500).json({ message: "internal server error" });
+    }
+};
+
 proyectsController.insertProyects = async (req, res) => {
     try {
         const {
@@ -134,6 +148,10 @@ proyectsController.insertProyects = async (req, res) => {
             finalPrice,
             description
         } = req.body;
+
+        if (String(idCustomer) !== String(req.userId)) {
+            return res.status(403).json({ message: "No autorizado para crear una cita para otro cliente." });
+        }
 
         const service = await servicesModel.findById(idService);
         if (!service || service.status !== true) {

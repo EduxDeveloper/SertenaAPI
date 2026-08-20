@@ -1,82 +1,61 @@
-import jwt from "jsonwebtoken";
+import jsonwebtoken from "jsonwebtoken";
 import { config } from "../../config.js";
 
-export const verifyToken = (req, res, next) => {
-    try {
-        const token = req.cookies.authClienteCookie;
+/**
+ * Valida una cookie de autenticación y el rol incluido en su JWT.
+ *
+ * El primer argumento debe coincidir exactamente con el nombre de la cookie
+ * creada por el login: authAdminCookie, authClienteCookie o authEmpleadoCookie.
+ * Para rutas compartidas se puede enviar un arreglo de cookies y de roles.
+ *
+ * Ejemplos:
+ * validateAuthCookie("authAdminCookie", ["admin"])
+ * validateAuthCookie(["authAdminCookie", "authEmpleadoCookie"], ["admin", "employee"])
+ */
+export const validateAuthCookie = (cookieNames, allowedTypes = []) => {
+    const acceptedCookies = Array.isArray(cookieNames) ? cookieNames : [cookieNames];
+    const acceptedRoles = Array.isArray(allowedTypes) ? allowedTypes : [allowedTypes];
 
-        if (!token) {
-            return res.status(401).json({ message: "No token provided, authorization denied" });
+    return (req, res, next) => {
+        try {
+            const cookieName = acceptedCookies.find((name) => req.cookies?.[name]);
+            // Las webs usan la cookie HttpOnly. React Native no dispone de un
+            // almacén de cookies fiable entre reinicios, por lo que la app móvil
+            // envía el mismo JWT mediante Authorization: Bearer <token>.
+            const bearerToken = req.get("authorization")?.match(/^Bearer\s+(.+)$/i)?.[1];
+            const authCookie = cookieName ? req.cookies[cookieName] : bearerToken;
+
+            if (!authCookie) {
+                return res.status(403).json({ message: "Authentication required" });
+            }
+
+            const decoded = jsonwebtoken.verify(authCookie, config.JWT.secret);
+
+            if (!acceptedRoles.includes(decoded.userType)) {
+                return res.status(401).json({ message: "Access denied" });
+            }
+
+            // Conserva los datos que ya utilizan los controladores de SERTENA.
+            req.userId = decoded.id;
+            req.userType = decoded.userType;
+            req.authCookieName = cookieName;
+
+            if (decoded.userType === "admin") {
+                req.adminId = decoded.id;
+                req.staffId = decoded.id;
+                req.staffType = "admin";
+            }
+
+            if (decoded.userType === "employee") {
+                req.empleadoId = decoded.id;
+                req.staffId = decoded.id;
+                req.staffType = "employee";
+            }
+
+            return next();
+        } catch (error) {
+            console.error("Authentication error:", error.message);
+            return res.status(401).json({ message: "Invalid or expired session" });
         }
-
-        const decoded = jwt.verify(token, config.JWT.secret);
-        req.userId = decoded.id;
-        req.userType = decoded.userType;
-        
-        next();
-    } catch (error) {
-        console.error("Token verification error:", error);
-        return res.status(401).json({ message: "Invalid token" });
-    }
-};
-
-export const verifyAdminToken = (req, res, next) => {
-    try {
-        const token = req.cookies.authAdminCookie;
-        if (!token) {
-            return res.status(401).json({ message: "Sesión de administrador requerida." });
-        }
-
-        const decoded = jwt.verify(token, config.JWT.secret);
-        if (decoded.userType !== "admin" || !decoded.id) {
-            return res.status(403).json({ message: "No tienes permisos para esta acción." });
-        }
-
-        req.adminId = decoded.id;
-        next();
-    } catch (error) {
-        return res.status(401).json({ message: "La sesión de administrador no es válida." });
-    }
-};
-
-export const verifyEmpleadoToken = (req, res, next) => {
-    try {
-        const token = req.cookies.authEmpleadoCookie;
-        if (!token) {
-            return res.status(401).json({ message: "Sesión de empleado requerida." });
-        }
-
-        const decoded = jwt.verify(token, config.JWT.secret);
-        if (decoded.userType !== "employee" || !decoded.id) {
-            return res.status(403).json({ message: "No tienes permisos para esta acción." });
-        }
-
-        req.empleadoId = decoded.id;
-        next();
-    } catch (error) {
-        return res.status(401).json({ message: "La sesión de empleado no es válida." });
-    }
-};
-
-// Permite el paso a admin O empleado. Usar solo en endpoints que
-// ambos roles necesitan (ej. ver/actualizar citas).
-export const verifyStaffToken = (req, res, next) => {
-    try {
-        const token = req.cookies.authAdminCookie || req.cookies.authEmpleadoCookie;
-
-        if (!token) {
-            return res.status(401).json({ message: "Sesión requerida." });
-        }
-
-        const decoded = jwt.verify(token, config.JWT.secret);
-        if (!["admin", "employee"].includes(decoded.userType) || !decoded.id) {
-            return res.status(403).json({ message: "No tienes permisos para esta acción." });
-        }
-
-        req.staffId = decoded.id;
-        req.staffType = decoded.userType;
-        next();
-    } catch (error) {
-        return res.status(401).json({ message: "La sesión no es válida." });
-    }
+    };
 };

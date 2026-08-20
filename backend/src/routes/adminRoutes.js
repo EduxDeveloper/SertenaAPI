@@ -1,15 +1,16 @@
 import express from "express";
 import adminController from "../controllers/adminController.js";
-import { verifyAdminToken } from "../middlewares/authMiddleware.js";
+import { validateAuthCookie } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
+const requireAdmin = validateAuthCookie("authAdminCookie", ["admin"]);
 
 router.route("/")
-    .get(verifyAdminToken, adminController.getAdmin);
+    .get(requireAdmin, adminController.getAdmin);
 
 router
     .route("/:id")
-    .put(verifyAdminToken, adminController.updateAdmin)
-    .delete(verifyAdminToken, adminController.deleteAdmin);
+    .put(requireAdmin, adminController.updateAdmin)
+    .delete(requireAdmin, adminController.deleteAdmin);
 
 export default router;

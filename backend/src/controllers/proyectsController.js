@@ -75,16 +75,73 @@ const normalizeAppointmentStatuses = async () => {
     );
 };
 
+const parseFinalPrice = (value) => {
+    const parsed = parseFloat(String(value ?? "0").replace(/[^0-9.-]/g, ""));
+    return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const normalizeStatus = (status) => (status === "Pendiente" ? "Programado" : status || "Programado");
+
+const STATUS_SORT_ORDER = { Atrasado: 0, Programado: 1, Finalizado: 2 };
+
+const sortAppointments = (appointments) => [...appointments].sort((first, second) => {
+    const firstOrder = STATUS_SORT_ORDER[normalizeStatus(first.status)] ?? 3;
+    const secondOrder = STATUS_SORT_ORDER[normalizeStatus(second.status)] ?? 3;
+    if (firstOrder !== secondOrder) return firstOrder - secondOrder;
+
+    const firstDate = new Date(first.dateStart || 0).getTime();
+    const secondDate = new Date(second.dateStart || 0).getTime();
+    if (firstDate !== secondDate) return firstDate - secondDate;
+
+    return new Date(second.createdAt || 0).getTime() - new Date(first.createdAt || 0).getTime();
+});
+
+const buildAppointmentSummary = (appointments) => {
+    const summary = {
+        activas: 0,
+        programadas: 0,
+        atrasadas: 0,
+        finalizadas: 0,
+        ingresosProyectados: 0,
+    };
+
+    appointments.forEach((appointment) => {
+        const status = normalizeStatus(appointment.status);
+        const price = parseFinalPrice(appointment.finalPrice);
+
+        if (status === "Finalizado") {
+            summary.finalizadas += 1;
+            return;
+        }
+
+        summary.activas += 1;
+        summary.ingresosProyectados += price;
+
+        if (status === "Programado") summary.programadas += 1;
+        if (status === "Atrasado") summary.atrasadas += 1;
+    });
+
+    return summary;
+};
+
+const buildStatusFilter = (statusParam) => {
+    if (!statusParam || statusParam === "Todas") return {};
+    if (!APPOINTMENT_STATUSES.includes(statusParam)) return {};
+    return { status: statusParam };
+};
+
+const populateAppointmentQuery = (query) => query
+    .populate("idService", "nameService")
+    .populate("idCustomer", "nombre")
+    .populate("idEmpleado", "nombre apellido name lastName");
+
 const proyectsController = {};
 
 proyectsController.getProyects = async (req, res) => {
     try {
         await normalizeAppointmentStatuses();
-        const proyects = await proyectsModel.find()
-            .populate("idService", "nameService")
-            .populate("idCustomer", "nombre")
-            .populate("idEmpleado", "nombre apellido name lastName");
-        return res.json(proyects);
+        const proyects = await populateAppointmentQuery(proyectsModel.find()).lean();
+        return res.json(sortAppointments(proyects));
     } catch (error) {
         console.log("error" + error);
         return res.status(500).json({ message: "internal server error" });
@@ -96,24 +153,26 @@ proyectsController.getProyectsPaginated = async (req, res) => {
         const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
         const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 10, 1), 50);
         const skip = (page - 1) * limit;
+        const statusFilter = buildStatusFilter(req.query.status);
 
         await normalizeAppointmentStatuses();
-        const [proyects, total] = await Promise.all([
-            proyectsModel.find()
-                .populate("idService", "nameService")
-                .populate("idCustomer", "nombre")
-                .populate("idEmpleado", "nombre apellido name lastName")
-                .sort({ dateStart: 1, createdAt: -1 })
-                .skip(skip)
-                .limit(limit),
-            proyectsModel.countDocuments()
+
+        const [allAppointments, filteredAppointments] = await Promise.all([
+            proyectsModel.find().select("status finalPrice dateStart createdAt").lean(),
+            populateAppointmentQuery(proyectsModel.find(statusFilter)).lean(),
         ]);
 
+        const summary = buildAppointmentSummary(allAppointments);
+        const sortedAppointments = sortAppointments(filteredAppointments);
+        const total = sortedAppointments.length;
+        const paginatedAppointments = sortedAppointments.slice(skip, skip + limit);
+
         return res.status(200).json({
-            data: proyects,
+            data: paginatedAppointments,
             total,
             page,
-            totalPages: Math.max(Math.ceil(total / limit), 1)
+            totalPages: Math.max(Math.ceil(total / limit), 1),
+            summary,
         });
     } catch (error) {
         console.log("error" + error);

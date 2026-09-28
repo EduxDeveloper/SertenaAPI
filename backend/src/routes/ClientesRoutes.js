@@ -6,8 +6,8 @@ import { validateAuthCookie } from "../middlewares/authMiddleware.js";
 const router = Router();
 const requireAdmin = validateAuthCookie("authAdminCookie", ["admin"]);
 const requireClientOrAdmin = validateAuthCookie(
-    ["authClienteCookie", "authAdminCookie"],
-    ["client", "admin"],
+    ["authAdminCookie", "authClienteCookie"],
+    ["admin", "client"],
 );
 const requireClient = validateAuthCookie("authClienteCookie", ["client"]);
 

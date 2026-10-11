@@ -17,6 +17,8 @@ router.route("/")
 router.get("/paginado", requireAdmin, proyectsController.getProyectsPaginated)
 router.get("/mis-citas", requireClient, proyectsController.getMyProyects)
 
+router.get("/disponibilidad/:serviceId", proyectsController.getAvailabilityByService);
+
 router.route("/:id")
     .put(requireStaff, proyectsController.updateProyects)
     .delete(requireAdmin, proyectsController.deleteProyects)

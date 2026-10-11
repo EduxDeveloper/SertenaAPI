@@ -186,8 +186,8 @@ proyectsController.getMyProyects = async (req, res) => {
         const proyects = await proyectsModel.find({ idCustomer: req.userId })
             .populate("idService", "nameService")
             .populate("idEmpleado", "nombre apellido name lastName")
-            .sort({ dateStart: 1, createdAt: -1 });
-        return res.status(200).json(proyects);
+            .lean();
+        return res.status(200).json(sortAppointments(proyects));
     } catch (error) {
         console.log("error" + error);
         return res.status(500).json({ message: "internal server error" });
@@ -205,7 +205,8 @@ proyectsController.insertProyects = async (req, res) => {
             clientCoordinates,
             clientMapUrl,
             finalPrice,
-            description
+            description,
+            appointmentDate // fecha elegida por el cliente (YYYY-MM-DD o ISO)
         } = req.body;
 
         if (String(idCustomer) !== String(req.userId)) {
@@ -241,41 +242,94 @@ proyectsController.insertProyects = async (req, res) => {
 
         let assignedEmployee = null;
         let assignedDate = null;
-        const candidateDate = startOfUtcDay(new Date());
-        candidateDate.setUTCDate(candidateDate.getUTCDate() + 1);
 
-        for (let daysChecked = 0; daysChecked < DIAS_MAXIMOS_DE_BUSQUEDA; daysChecked += 1) {
-            if (!isWeekend(candidateDate)) {
-                const nextDay = new Date(candidateDate);
-                nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+        // Si el cliente eligió una fecha específica
+        if (appointmentDate) {
+            const parsedTarget = new Date(appointmentDate);
+            if (Number.isNaN(parsedTarget.getTime())) {
+                return res.status(400).json({ message: "La fecha proporcionada no es válida." });
+            }
 
-                for (const employee of eligibleEmployees) {
-                    const appointmentCount = await proyectsModel.countDocuments({
-                        idEmpleado: employee._id,
-                        dateStart: { $gte: candidateDate, $lt: nextDay },
-                        status: { $not: /^cancelado$/i }
-                    });
+            // Normalizar a inicio de día UTC
+            const targetUtc = startOfUtcDay(parsedTarget);
+            const todayUtc = startOfUtcDay(new Date());
 
-                    if (appointmentCount < MAX_CITAS_POR_EMPLEADO_Y_DIA) {
-                        assignedEmployee = employee;
-                        // Mediodía UTC evita que la interfaz muestre el día anterior en América.
-                        assignedDate = new Date(Date.UTC(
-                            candidateDate.getUTCFullYear(),
-                            candidateDate.getUTCMonth(),
-                            candidateDate.getUTCDate(),
-                            12
-                        ));
-                        break;
-                    }
+            if (targetUtc < todayUtc) {
+                return res.status(400).json({ message: "No se pueden agendar citas en fechas pasadas." });
+            }
+
+            if (isWeekend(targetUtc)) {
+                return res.status(400).json({ message: "No se pueden programar citas en sábado o domingo." });
+            }
+
+            const nextDayUtc = new Date(targetUtc);
+            nextDayUtc.setUTCDate(nextDayUtc.getUTCDate() + 1);
+
+            // Buscar empleado elegible con menos de 3 citas en esa fecha
+            let bestEmployee = null;
+            let minCitas = MAX_CITAS_POR_EMPLEADO_Y_DIA;
+
+            for (const employee of eligibleEmployees) {
+                const count = await proyectsModel.countDocuments({
+                    idEmpleado: employee._id,
+                    dateStart: { $gte: targetUtc, $lt: nextDayUtc },
+                    status: { $not: /^cancelado$/i }
+                });
+
+                if (count < minCitas) {
+                    minCitas = count;
+                    bestEmployee = employee;
                 }
             }
 
-            if (assignedEmployee) break;
-            candidateDate.setUTCDate(candidateDate.getUTCDate() + 1);
-        }
+            if (!bestEmployee) {
+                return res.status(409).json({ message: "No hay técnicos disponibles para la fecha seleccionada. Por favor, elige otro día." });
+            }
 
-        if (!assignedEmployee || !assignedDate) {
-            return res.status(503).json({ message: "No hay disponibilidad en los próximos 30 días." });
+            assignedEmployee = bestEmployee;
+            assignedDate = new Date(Date.UTC(
+                targetUtc.getUTCFullYear(),
+                targetUtc.getUTCMonth(),
+                targetUtc.getUTCDate(),
+                12
+            ));
+        } else {
+            // Asignación automática por compatibilidad si no se envía fecha
+            const candidateDate = startOfUtcDay(new Date());
+            candidateDate.setUTCDate(candidateDate.getUTCDate() + 1);
+
+            for (let daysChecked = 0; daysChecked < DIAS_MAXIMOS_DE_BUSQUEDA; daysChecked += 1) {
+                if (!isWeekend(candidateDate)) {
+                    const nextDay = new Date(candidateDate);
+                    nextDay.setUTCDate(nextDay.getUTCDate() + 1);
+
+                    for (const employee of eligibleEmployees) {
+                        const appointmentCount = await proyectsModel.countDocuments({
+                            idEmpleado: employee._id,
+                            dateStart: { $gte: candidateDate, $lt: nextDay },
+                            status: { $not: /^cancelado$/i }
+                        });
+
+                        if (appointmentCount < MAX_CITAS_POR_EMPLEADO_Y_DIA) {
+                            assignedEmployee = employee;
+                            assignedDate = new Date(Date.UTC(
+                                candidateDate.getUTCFullYear(),
+                                candidateDate.getUTCMonth(),
+                                candidateDate.getUTCDate(),
+                                12
+                            ));
+                            break;
+                        }
+                    }
+                }
+
+                if (assignedEmployee) break;
+                candidateDate.setUTCDate(candidateDate.getUTCDate() + 1);
+            }
+
+            if (!assignedEmployee || !assignedDate) {
+                return res.status(503).json({ message: "No hay disponibilidad en los próximos 30 días." });
+            }
         }
 
         const newProyect = new proyectsModel({
@@ -427,6 +481,85 @@ proyectsController.searchByDate = async (req, res) => {
         }
 
         return res.status(200).json(proyects);
+    } catch (error) {
+        console.log("error" + error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+proyectsController.getAvailabilityByService = async (req, res) => {
+    try {
+        const { serviceId } = req.params;
+        const { month, year } = req.query;
+
+        const service = await servicesModel.findById(serviceId);
+        if (!service || service.status !== true) {
+            return res.status(404).json({ message: "Servicio no encontrado o inactivo" });
+        }
+
+        const eligibleEmployees = await empleadoModel.find({
+            status: true,
+            services: serviceId
+        });
+
+        // Si no hay empleados activos para este servicio, no hay disponibilidad
+        if (eligibleEmployees.length === 0) {
+            return res.json({
+                hasEligibleEmployees: false,
+                fullyBookedDates: [],
+                message: "No hay empleados disponibles para este servicio"
+            });
+        }
+
+        // Determinar rango del mes
+        const targetYear = year ? parseInt(year, 10) : new Date().getUTCFullYear();
+        const targetMonth = month ? parseInt(month, 10) - 1 : new Date().getUTCMonth(); // 0-indexed
+
+        const startDate = new Date(Date.UTC(targetYear, targetMonth, 1));
+        const endDate = new Date(Date.UTC(targetYear, targetMonth + 1, 1));
+
+        // Obtener citas activas en el rango para los empleados elegibles
+        const appointments = await proyectsModel.find({
+            idEmpleado: { $in: eligibleEmployees.map(e => e._id) },
+            dateStart: { $gte: startDate, $lt: endDate },
+            status: { $not: /^cancelado$/i }
+        }).select("dateStart idEmpleado");
+
+        // Agrupar citas por "YYYY-MM-DD" y por empleado
+        // Un día está totalmente lleno si TODOS los empleados elegibles tienen >= 3 citas ese día.
+        const dayEmployeeCount = {}; // { "YYYY-MM-DD": { [empId]: count } }
+
+        for (const app of appointments) {
+            if (!app.dateStart) continue;
+            const dateStr = app.dateStart.toISOString().split("T")[0];
+            if (!dayEmployeeCount[dateStr]) {
+                dayEmployeeCount[dateStr] = {};
+            }
+            const empId = String(app.idEmpleado);
+            dayEmployeeCount[dateStr][empId] = (dayEmployeeCount[dateStr][empId] || 0) + 1;
+        }
+
+        const fullyBookedDates = [];
+        const totalEligible = eligibleEmployees.length;
+
+        for (const [dateStr, empCounts] of Object.entries(dayEmployeeCount)) {
+            let saturatedEmployees = 0;
+            for (const emp of eligibleEmployees) {
+                const count = empCounts[String(emp._id)] || 0;
+                if (count >= MAX_CITAS_POR_EMPLEADO_Y_DIA) {
+                    saturatedEmployees += 1;
+                }
+            }
+            if (saturatedEmployees >= totalEligible) {
+                fullyBookedDates.push(dateStr);
+            }
+        }
+
+        return res.json({
+            hasEligibleEmployees: true,
+            totalEligibleEmployees: totalEligible,
+            fullyBookedDates
+        });
     } catch (error) {
         console.log("error" + error);
         return res.status(500).json({ message: "Internal server error" });

@@ -26,18 +26,29 @@ reviewsController.getReviewsPaginated = async (req, res) => {
             Math.max(parseInt(req.query.limit, 10) || 4, 1),
             50
         );
-
         const skip = (page - 1) * limit;
+
+        const filter = {};
+        if (req.query.rating) {
+            const ratingParam = String(req.query.rating).trim();
+            if (ratingParam.includes("-")) {
+                const [min, max] = ratingParam.split("-").map(Number);
+                filter.rating = { $gte: min || 1, $lte: max || 5 };
+            } else if (!isNaN(Number(ratingParam))) {
+                filter.rating = Number(ratingParam);
+            }
+        }
 
         const [reviews, total] = await Promise.all([
             reviewsModel
-                .find()
+                .find(filter)
                 .populate('idCustomer', 'nombre')
                 .populate('idService', 'nameService')
+                .sort({ createdAt: -1 })
                 .skip(skip)
                 .limit(limit),
 
-            reviewsModel.countDocuments()
+            reviewsModel.countDocuments(filter)
         ]);
 
         return res.status(200).json({

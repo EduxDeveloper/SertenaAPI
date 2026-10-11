@@ -5,31 +5,38 @@ const empleadoController = {};
 
 empleadoController.crearEmpleado = async (req, res) => {
     try {
-        let { nombre, apellido, email, contraseña, salario, status = true, services } = req.body;
+        let { nombre, apellido, name, lastName, email, contraseña, password, salario, salary, status = true, services } = req.body;
 
-        nombre = nombre?.trim();
-        apellido = apellido?.trim();
-        email = email?.trim();
-        contraseña = contraseña?.trim();
+        nombre = (nombre || name)?.trim();
+        apellido = (apellido || lastName)?.trim();
+        email = email?.trim()?.toLowerCase();
+        const rawPassword = (contraseña || password)?.trim();
+        const sueldo = salario !== undefined ? salario : salary;
 
-        if (!nombre || !apellido || !email || !contraseña || !salario) {
+        if (!nombre || !apellido || !email || !rawPassword || sueldo === undefined || sueldo === "") {
             return res.status(400).json({ message: "Todos los campos son requeridos" });
         }
 
-        const empleadoExiste = await empleadoModel.findOne({ email });
+        const empleadoExiste = await empleadoModel.findOne({
+            email: { $regex: new RegExp(`^${email}$`, "i") }
+        });
         if (empleadoExiste) {
             return res.status(400).json({ message: "El correo ya está registrado" });
         }
 
         const salt = await bcrypt.genSalt(10);
-        const contraseñaHasheada = await bcrypt.hash(contraseña, salt);
+        const contraseñaHasheada = await bcrypt.hash(rawPassword, salt);
 
         const nuevoEmpleado = new empleadoModel({
             nombre,
+            name: nombre,
             apellido,
+            lastName: apellido,
             email,
             contraseña: contraseñaHasheada,
-            salario,
+            password: contraseñaHasheada,
+            salario: sueldo,
+            salary: sueldo,
             status: status === true,
             services: services || []
         });
@@ -90,34 +97,39 @@ empleadoController.eliminarEmpleado = async (req, res) => {
 
 empleadoController.actualizarEmpleado = async (req, res) => {
     try {
-        let { nombre, apellido, email, contraseña, salario, status, services } = req.body;
+        let { nombre, apellido, name, lastName, email, contraseña, password, salario, salary, status, services } = req.body;
 
-        nombre = nombre?.trim();
-        apellido = apellido?.trim();
-        email = email?.trim();
+        nombre = (nombre || name)?.trim();
+        apellido = (apellido || lastName)?.trim();
+        email = email?.trim()?.toLowerCase();
+        const sueldo = salario !== undefined ? salario : salary;
 
-        if (!nombre || !apellido || !email || !salario) {
+        if (!nombre || !apellido || !email || sueldo === undefined || sueldo === "") {
             return res.status(400).json({ message: "Nombre, apellido, email y salario son requeridos" });
         }
 
         const camposActualizar = {
             nombre,
+            name: nombre,
             apellido,
+            lastName: apellido,
             email,
-            salario,
-            services
+            salario: sueldo,
+            salary: sueldo,
+            services: services || []
         };
 
         if (typeof status === "boolean") {
             camposActualizar.status = status;
         }
 
-        if (contraseña) {
-            contraseña = contraseña.trim();
-            if (contraseña !== "") {
-                const salt = await bcrypt.genSalt(10);
-                camposActualizar.contraseña = await bcrypt.hash(contraseña, salt);
-            }
+        const rawPassword = (contraseña || password)?.trim();
+        // Solo actualiza la contraseña si se envió una no vacía. Si se deja en blanco, se mantiene la actual.
+        if (rawPassword && rawPassword !== "") {
+            const salt = await bcrypt.genSalt(10);
+            const hashed = await bcrypt.hash(rawPassword, salt);
+            camposActualizar.contraseña = hashed;
+            camposActualizar.password = hashed;
         }
 
         const empleadoActualizado = await empleadoModel.findByIdAndUpdate(

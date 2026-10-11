@@ -12,18 +12,32 @@ const loginAdminController = {};
 loginAdminController.login = async (req, res) => {
     try {
         //#1- Solicitar los datos
-        const { email, password } = req.body;
+        let { email, password } = req.body;
+        if (!password) password = req.body.contraseña;
 
-        //Verificar si el correo existe en la base de datos
-        const adminFound = await adminModel.findOne({ email });
+        if (!email || !password) {
+            return res.status(400).json({ message: "Fields required" });
+        }
+
+        email = email.trim();
+
+        //Verificar si el correo existe en la base de datos (insensible a mayúsculas)
+        const adminFound = await adminModel.findOne({
+            email: { $regex: new RegExp(`^${email}$`, "i") }
+        });
 
         //Si no existe el correo
         if (!adminFound) {
             return res.status(400).json({ message: "Admin not found" });
         }
 
+        const storedPassword = adminFound.password || adminFound.contraseña;
+        if (!storedPassword) {
+            return res.status(401).json({ message: "Wrong password" });
+        }
+
         //Validar la contraseña
-        const isMatch = await bcrypt.compare(password, adminFound.password);
+        const isMatch = await bcrypt.compare(password, storedPassword);
 
         //Si la contraseña está incorrecta
         if (!isMatch) {
